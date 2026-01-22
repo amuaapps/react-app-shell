@@ -16,8 +16,8 @@ describe('Remote App Contract', () => {
     it('allows valid RemoteAppInstance implementation', () => {
       const validInstance: RemoteAppInstance = {
         contractVersion: '1',
-        mount: async () => ({ success: true }),
-        unmount: async () => {},
+        mount: async () => Promise.resolve({ success: true }),
+        unmount: async () => Promise.resolve(),
       };
 
       expect(validInstance.contractVersion).toBe('1');
@@ -28,12 +28,13 @@ describe('Remote App Contract', () => {
     it('allows RemoteAppInstance without optional unmount', () => {
       const minimalInstance: RemoteAppInstance = {
         contractVersion: '1',
-        mount: async () => ({ success: true }),
+        mount: async () => Promise.resolve({ success: true }),
       };
 
       expect(minimalInstance.contractVersion).toBe('1');
       expect(typeof minimalInstance.mount).toBe('function');
-      expect(minimalInstance.unmount).toBeUndefined();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(minimalInstance.unmount).not.toBeDefined();
     });
   });
 
@@ -93,12 +94,12 @@ describe('Remote App Contract', () => {
       // Actual validation is tested in integration tests with real remotes
       const validInstance: RemoteAppInstance = {
         contractVersion: REMOTE_APP_CONTRACT_VERSION,
-        mount: async () => ({ success: true }),
+        mount: async () => Promise.resolve({ success: true }),
       };
 
       const incompatibleInstance = {
         contractVersion: '999',
-        mount: async () => ({ success: true }),
+        mount: async () => Promise.resolve({ success: true }),
       };
 
       expect(validInstance.contractVersion).toBe('1');
@@ -130,7 +131,10 @@ describe('Remote App Contract', () => {
         onNavigate,
       };
 
-      options.onNavigate?.('/campaigns/456');
+      const callback = options.onNavigate;
+      if (callback) {
+        callback('/campaigns/456');
+      }
       expect(onNavigate).toHaveBeenCalledWith('/campaigns/456');
     });
   });
