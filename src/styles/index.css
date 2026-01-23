@@ -1,3 +1,8 @@
+/* Tailwind CSS directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Shell-specific layout styles using tokens from ui-theme-core */
 
 .app-shell {

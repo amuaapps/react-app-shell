@@ -5,7 +5,8 @@ import { BrowserRouter } from 'react-router-dom';
 // Import theme-core styles FIRST to ensure CSS variables and tokens are available globally
 // This provides: color tokens, spacing scale, typography, radius, shadows, etc.
 // Light/dark theme toggling can be added later by setting data-theme attribute on <html>
-import '@amuaapps/ui-theme-core/theme.css';
+// TEMPORARY: Using local copy until package import issue is resolved
+import './styles/theme-core.css';
 
 import App from './App';
 import './styles/index.css';

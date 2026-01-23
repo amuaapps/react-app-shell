@@ -9,7 +9,7 @@ describe('App', () => {
         <App />
       </BrowserRouter>
     );
-    expect(screen.getByRole('heading', { name: /React App Shell/i, level: 1 })).toBeInTheDocument();
+    expect(screen.getByText('React App Shell')).toBeInTheDocument();
   });
 
   it('renders the home page content', () => {

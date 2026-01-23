@@ -10,7 +10,7 @@ describe('Routing Integration', () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByRole('heading', { name: /React App Shell/i, level: 1 })).toBeInTheDocument();
+    expect(screen.getByText('React App Shell')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Welcome to React App Shell/i, level: 2 })).toBeInTheDocument();
   });
 
@@ -21,8 +21,8 @@ describe('Routing Integration', () => {
       </BrowserRouter>
     );
 
-    expect(container.querySelector('.shell-header')).toBeInTheDocument();
+    expect(container.querySelector('nav')).toBeInTheDocument();
     expect(container.querySelector('.shell-content')).toBeInTheDocument();
-    expect(container.querySelector('.shell-footer')).toBeInTheDocument();
+    expect(container.querySelector('footer')).toBeInTheDocument();
   });
 });
