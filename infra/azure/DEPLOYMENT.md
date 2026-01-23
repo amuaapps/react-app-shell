@@ -32,12 +32,20 @@ az ad app federated-credential create \
 
 ### 3. Deploy via GitHub Actions
 
-1. Navigate to **Actions** → **Deploy to Azure Container Apps**
+**Automatic Deployment (Recommended):**
+- Push to `develop` branch → Deploys to dev (0% traffic)
+- Push to `staging` branch → Deploys to staging (0% traffic)
+- Push to `main` branch → Deploys to prod + switches traffic to 100%
+
+**Manual Deployment:**
+1. Navigate to **Actions** → **CI/CD Pipeline**
 2. Click **Run workflow**
 3. Configure:
-   - Environment: `prod`
-   - Revision label: `blue`
-   - Traffic weight: `100`
+   - Environment: `dev`, `staging`, or `prod`
+   - Deploy enabled: `true`
+   - Revision label: `blue` or `green`
+   - Initial traffic weight: `0` (for testing) or `100` (immediate switch)
+   - Enable traffic switch: `true` to auto-switch after verification
 
 ### 4. Verify Deployment
 

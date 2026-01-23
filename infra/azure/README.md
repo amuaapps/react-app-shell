@@ -55,4 +55,23 @@ Configure the following secrets in your GitHub repository (Settings → Secrets 
 
 ## Deployment
 
-Deployment is automated via GitHub Actions. See `.github/workflows/` for CI/CD pipelines.
+### Automated CI/CD Pipeline
+
+The unified CI/CD pipeline (`.github/workflows/deploy.yml`) handles the complete flow:
+
+**Pipeline Stages:**
+1. **Test** - Lint, type check, unit & integration tests
+2. **Build** - Build and push container image to GHCR
+3. **Deploy** - Deploy new revision to Azure with 0% traffic
+4. **Verify** - Health checks and smoke tests on new revision
+5. **Traffic Switch** - Optionally switch 100% traffic to new revision
+
+**Automatic Triggers:**
+- **Push to develop** → Deploy to dev environment (0% traffic, manual switch required)
+- **Push to staging** → Deploy to staging environment (0% traffic, manual switch required)
+- **Push to main** → Deploy to prod + automatic traffic switch to 100%
+- **Pull requests** → Run tests only (no deployment)
+
+**Manual Deployment:**
+- Go to **Actions** → **CI/CD Pipeline** → **Run workflow**
+- Configure deployment options (environment, revision label, traffic settings)
