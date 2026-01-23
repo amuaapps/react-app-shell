@@ -33,6 +33,6 @@ export function getRemoteUrl(remoteName: 'core' | 'campaigns'): string {
     case 'campaigns':
       return config.campaignsRemoteEntryUrl;
     default:
-      throw new Error(`Unknown remote application: ${remoteName}`);
+      throw new Error(`Unknown remote application: ${remoteName as string}`);
   }
 }

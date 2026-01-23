@@ -47,11 +47,11 @@ const DEFAULT_CONFIG: RemoteConfig = {
 export function getRemoteConfig(): RemoteConfig {
   return {
     coreRemoteEntryUrl: 
-      import.meta.env.VITE_CORE_REMOTE_ENTRY_URL || 
+      (import.meta.env.VITE_CORE_REMOTE_ENTRY_URL as string | undefined) || 
       DEFAULT_CONFIG.coreRemoteEntryUrl,
     
     campaignsRemoteEntryUrl: 
-      import.meta.env.VITE_CAMPAIGNS_REMOTE_ENTRY_URL || 
+      (import.meta.env.VITE_CAMPAIGNS_REMOTE_ENTRY_URL as string | undefined) || 
       DEFAULT_CONFIG.campaignsRemoteEntryUrl,
   };
 }
@@ -87,6 +87,6 @@ export function getRemoteUrl(remoteName: 'core' | 'campaigns'): string {
     case 'campaigns':
       return config.campaignsRemoteEntryUrl;
     default:
-      throw new Error(`Unknown remote application: ${remoteName}`);
+      throw new Error(`Unknown remote application: ${remoteName as string}`);
   }
 }
