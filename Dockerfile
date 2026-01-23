@@ -16,9 +16,9 @@ RUN if [ -n "$NPM_PACKAGE_TOKEN" ]; then \
       echo "@amuaapps:registry=https://npm.pkg.github.com" >> ~/.npmrc; \
     fi
 
-# Install dependencies
+# Install dependencies (including devDependencies needed for build)
 # Use npm install due to persistent lock file sync issues
-RUN npm install --only=production
+RUN npm install
 
 # Clean up npmrc to avoid leaking token in image
 RUN rm -f ~/.npmrc
