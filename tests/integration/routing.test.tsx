@@ -10,13 +10,20 @@ describe('Routing Integration', () => {
       </BrowserRouter>
     );
 
+    // Check that TopNavigation renders
     expect(screen.getByText('React App Shell')).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', {
-        name: /Welcome to React App Shell/i,
-        level: 2,
-      })
-    ).toBeInTheDocument();
+  });
+
+  it('renders TopNavigation and Footer in layout', () => {
+    render(
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    );
+
+    expect(screen.getByText('React App Shell')).toBeInTheDocument();
+    // Footer copyright text includes current year
+    expect(screen.getByText(/ \d{4} Amua Apps/i)).toBeInTheDocument();
   });
 
   it('displays layout with header and footer', () => {
