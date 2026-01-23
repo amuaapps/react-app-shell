@@ -20,7 +20,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@amuaapps/ui-library": "1.1.0-next.49",
+    "@amuaapps/ui-library": "1.1.2-next.61",
     "@amuaapps/ui-theme-core": "0.1.0-pr.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

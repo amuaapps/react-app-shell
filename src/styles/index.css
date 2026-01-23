@@ -8,31 +8,9 @@
   color: var(--foreground);
 }
 
-.shell-header {
-  background-color: var(--card);
-  border-bottom: 1px solid var(--border);
-  padding: var(--space-4) var(--space-8);
-}
-
-.shell-header nav h1 {
-  margin-bottom: var(--space-1);
-}
-
-.shell-header nav p {
-  color: var(--muted-foreground);
-}
-
 .shell-content {
   flex: 1;
   padding: var(--space-8);
-}
-
-.shell-footer {
-  background-color: var(--card);
-  border-top: 1px solid var(--border);
-  padding: var(--space-4) var(--space-8);
-  text-align: center;
-  color: var(--muted-foreground);
 }
 
 .home-page h2 {

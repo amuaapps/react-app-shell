@@ -3,32 +3,31 @@ import { BrowserRouter } from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
 
 describe('MainLayout', () => {
-  it('renders header with placeholder text', () => {
+  it('renders TopNavigation component', () => {
     render(
       <BrowserRouter>
         <MainLayout />
       </BrowserRouter>
     );
-    expect(screen.getByText(/TopNavigation placeholder/i)).toBeInTheDocument();
+    expect(screen.getByText(/React App Shell/i)).toBeInTheDocument();
   });
 
-  it('renders footer with placeholder text', () => {
+  it('renders Footer component with copyright', () => {
     render(
       <BrowserRouter>
         <MainLayout />
       </BrowserRouter>
     );
-    expect(screen.getByText(/Footer placeholder/i)).toBeInTheDocument();
+    expect(screen.getByText(/ Amua Apps/i)).toBeInTheDocument();
   });
 
-  it('has correct structure with header, main, and footer', () => {
+  it('renders main content area', () => {
     const { container } = render(
       <BrowserRouter>
         <MainLayout />
       </BrowserRouter>
     );
-    expect(container.querySelector('.shell-header')).toBeInTheDocument();
+
     expect(container.querySelector('.shell-content')).toBeInTheDocument();
-    expect(container.querySelector('.shell-footer')).toBeInTheDocument();
   });
 });

@@ -1,22 +1,24 @@
 import { Outlet } from 'react-router-dom';
+import { TopNavigation } from '@amuaapps/ui-library';
+import { Footer } from '@amuaapps/ui-library';
 
 function MainLayout() {
   return (
     <div className="app-shell">
-      <header className="shell-header">
-        <nav>
-          <h1>React App Shell</h1>
-          <p>TopNavigation placeholder (from @amuaapps/ui-library)</p>
-        </nav>
-      </header>
+      <TopNavigation logo={<span>React App Shell</span>} />
 
       <main className="shell-content">
         <Outlet />
       </main>
 
-      <footer className="shell-footer">
-        <p>Footer placeholder (from @amuaapps/ui-library)</p>
-      </footer>
+      <Footer
+        copyrightText={`© ${new Date().getFullYear()} Amua Apps`}
+        links={[
+          { label: 'Privacy', href: '/privacy' },
+          { label: 'Terms', href: '/terms' },
+          { label: 'Contact', href: '/contact' },
+        ]}
+      />
     </div>
   );
 }
