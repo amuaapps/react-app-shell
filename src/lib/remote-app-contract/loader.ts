@@ -93,7 +93,9 @@ async function loadRemoteAppScript(
  */
 function getRemoteAppInstance(name: string): RemoteAppInstance | null {
   const globalKey = `remoteApp_${name}`;
-  return (window as unknown as Record<string, RemoteAppInstance>)[globalKey] || null;
+  return (
+    (window as unknown as Record<string, RemoteAppInstance>)[globalKey] || null
+  );
 }
 
 /**

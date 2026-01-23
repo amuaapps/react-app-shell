@@ -11,7 +11,12 @@ describe('Routing Integration', () => {
     );
 
     expect(screen.getByText('React App Shell')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Welcome to React App Shell/i, level: 2 })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /Welcome to React App Shell/i,
+        level: 2,
+      })
+    ).toBeInTheDocument();
   });
 
   it('displays layout with header and footer', () => {

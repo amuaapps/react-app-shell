@@ -1,10 +1,14 @@
-import { getRemoteConfig, getRemoteUrl, isValidRemoteUrl } from '@/config/remotes';
+import {
+  getRemoteConfig,
+  getRemoteUrl,
+  isValidRemoteUrl,
+} from '@/config/remotes';
 
 describe('Remote Configuration', () => {
   describe('getRemoteConfig', () => {
     it('returns configuration object with both remote URLs', () => {
       const config = getRemoteConfig();
-      
+
       expect(config).toHaveProperty('coreRemoteEntryUrl');
       expect(config).toHaveProperty('campaignsRemoteEntryUrl');
       expect(typeof config.coreRemoteEntryUrl).toBe('string');
@@ -13,7 +17,7 @@ describe('Remote Configuration', () => {
 
     it('returns valid URLs', () => {
       const config = getRemoteConfig();
-      
+
       expect(config.coreRemoteEntryUrl).toContain('remoteEntry.js');
       expect(config.campaignsRemoteEntryUrl).toContain('remoteEntry.js');
     });
@@ -33,13 +37,17 @@ describe('Remote Configuration', () => {
     });
 
     it('throws error for invalid remote name', () => {
-      expect(() => getRemoteUrl('invalid' as 'core')).toThrow('Unknown remote application: invalid');
+      expect(() => getRemoteUrl('invalid' as 'core')).toThrow(
+        'Unknown remote application: invalid'
+      );
     });
   });
 
   describe('isValidRemoteUrl', () => {
     it('returns true for valid http URL', () => {
-      expect(isValidRemoteUrl('http://localhost:3002/remoteEntry.js')).toBe(true);
+      expect(isValidRemoteUrl('http://localhost:3002/remoteEntry.js')).toBe(
+        true
+      );
     });
 
     it('returns true for valid https URL', () => {

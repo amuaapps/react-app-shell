@@ -26,7 +26,7 @@ export function isValidRemoteUrl(url: string): boolean {
 
 export function getRemoteUrl(remoteName: 'core' | 'campaigns'): string {
   const config = getRemoteConfig();
-  
+
   switch (remoteName) {
     case 'core':
       return config.coreRemoteEntryUrl;
