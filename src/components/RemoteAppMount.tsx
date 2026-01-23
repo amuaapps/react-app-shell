@@ -40,10 +40,18 @@ export default function RemoteAppMount({
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      console.warn(`RemoteAppMount: Container not ready for "${name}"`);
+      return;
+    }
 
     // Prevent double mounting
-    if (mountedRef.current) return;
+    if (mountedRef.current) {
+      console.log(`RemoteAppMount: Already mounted "${name}"`);
+      return;
+    }
+
+    console.log(`RemoteAppMount: Mounting "${name}" at ${location.pathname}`);
 
     const mountRemote = async () => {
       try {
@@ -61,6 +69,7 @@ export default function RemoteAppMount({
           return;
         }
 
+        console.log(`RemoteAppMount: Successfully mounted "${name}"`);
         mountedRef.current = true;
         unmountFnRef.current = remoteApp.unmount
           ? () => remoteApp.unmount!()

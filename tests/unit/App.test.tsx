@@ -31,7 +31,7 @@ describe('App', () => {
         <App />
       </BrowserRouter>
     );
-    
+
     // Check that main content area exists where remote apps will be mounted
     const mainContent = container.querySelector('.shell-content');
     expect(mainContent).not.toBeNull();

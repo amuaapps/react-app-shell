@@ -19,7 +19,13 @@ function App() {
           }
         />
 
-        {/* Core app owns all other routes (/*) */}
+        {/* Core app owns all other routes - both index and catch-all */}
+        <Route
+          index
+          element={
+            <RemoteAppMount remoteApp={coreAppStub} basePath="/" name="core" />
+          }
+        />
         <Route
           path="*"
           element={
