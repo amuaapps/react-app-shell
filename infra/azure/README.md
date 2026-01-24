@@ -41,19 +41,21 @@ This directory contains Bicep templates for deploying the React App Shell to Azu
 
 Configure the following secrets in your GitHub repository (Settings → Secrets → Actions):
 
-**Required for all environments:**
-- `AZURE_CLIENT_ID`: Service principal application (client) ID
-- `AZURE_TENANT_ID`: Azure AD tenant ID
-- `AZURE_SUBSCRIPTION_ID`: Azure subscription ID
+**Repository-level variables** (Settings → Secrets and variables → Actions → Variables):
+- `AZURE_REGION`: Azure region (e.g., eastus, westeurope, northeurope)
+
+**Repository-level secrets** (Settings → Secrets and variables → Actions → Repository secrets):
 - `NPM_PACKAGE_TOKEN`: Token for accessing private npm packages
 
 **Environment-specific secrets** (configure per environment: dev, staging, prod):
+- `AZURE_CLIENT_ID`: Service principal application (client) ID
+- `AZURE_TENANT_ID`: Azure AD tenant ID
+- `AZURE_SUBSCRIPTION_ID`: Azure subscription ID
 - `AZURE_RESOURCE_GROUP_NAME`: Name of the resource group
-- `AZURE_REGION`: Azure region (e.g., eastus, westeurope, northeurope)
 - `AZURE_CONTAINER_APPS_ENVIRONMENT_NAME`: Name for the Container Apps Environment
 - `AZURE_CONTAINER_APP_NAME`: Name for the Container App
 
-**Important:** These must be configured as **Environment secrets** (not Environment variables) in GitHub:
+**Important:** Environment-specific values must be configured as **Environment secrets**:
 - Go to Settings → Environments → [environment-name] → Environment secrets
 - Add each secret with its value for that specific environment
 

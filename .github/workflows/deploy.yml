@@ -230,7 +230,7 @@ jobs:
           echo "AZURE_RESOURCE_GROUP_NAME: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}"
           echo "AZURE_CONTAINER_APPS_ENVIRONMENT_NAME: ${{ secrets.AZURE_CONTAINER_APPS_ENVIRONMENT_NAME }}"
           echo "AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}"
-          echo "AZURE_REGION: ${{ secrets.AZURE_REGION }}"
+          echo "AZURE_REGION: ${{ vars.AZURE_REGION }}"
           echo "Image reference: ${{ needs.build.outputs.image_tag }}"
           echo "Revision suffix: ${{ steps.revision.outputs.suffix }}"
 
@@ -248,7 +248,7 @@ jobs:
             revisionSuffix=${{ steps.revision.outputs.suffix }}
             trafficWeight=${{ steps.traffic.outputs.weight }}
             revisionLabel=${{ steps.revision_label.outputs.label }}
-            location=${{ secrets.AZURE_REGION }}
+            location=${{ vars.AZURE_REGION }}
             environment=${{ needs.build.outputs.environment }}
           failOnStdErr: false
 
