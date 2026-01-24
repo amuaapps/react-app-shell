@@ -31,13 +31,18 @@ param revisionLabel string
 @description('Whether this is the first deployment (no existing revisions)')
 param isFirstDeployment bool
 
+@description('Environment name (dev, staging, prod)')
+param environment string
+
 @description('Tags to apply to resources')
 param tags object = {}
 
 resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: containerAppName
   location: location
-  tags: tags
+  tags: union(tags, {
+    environment: environment
+  })
   properties: {
     managedEnvironmentId: environmentId
     configuration: {
