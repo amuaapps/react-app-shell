@@ -115,4 +115,4 @@ output containerAppName string = containerApp.name
 output fqdn string = containerApp.properties.configuration.ingress.fqdn
 output latestRevisionName string = containerApp.properties.latestRevisionName
 output latestRevisionFqdn string = containerApp.properties.latestRevisionFqdn
-output revisionUrl string = 'https://${revisionLabel}---${containerApp.properties.configuration.ingress.fqdn}'
+output revisionUrl string = 'https://${containerApp.properties.latestRevisionFqdn}'

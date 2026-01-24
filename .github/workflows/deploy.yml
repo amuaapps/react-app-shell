@@ -280,6 +280,12 @@ jobs:
 
       - name: Output deployment info
         run: |
+          echo "Debug - All deployment outputs:"
+          echo "activeUrl: ${{ steps.deploy.outputs.activeUrl }}"
+          echo "revisionUrl: ${{ steps.deploy.outputs.revisionUrl }}"
+          echo "latestRevisionName: ${{ steps.deploy.outputs.latestRevisionName }}"
+          echo "containerAppName: ${{ steps.deploy.outputs.containerAppName }}"
+          
           echo "### 🚀 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** ${{ needs.build.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
