@@ -248,6 +248,7 @@ jobs:
             revisionSuffix=${{ steps.revision.outputs.suffix }}
             trafficWeight=${{ steps.traffic.outputs.weight }}
             revisionLabel=${{ steps.revision_label.outputs.label }}
+            isFirstDeployment=true
             location=${{ vars.AZURE_REGION }}
             environment=${{ needs.build.outputs.environment }}
           failOnStdErr: false

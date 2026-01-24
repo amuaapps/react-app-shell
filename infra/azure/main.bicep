@@ -50,13 +50,15 @@ param revisionLabel string = 'active'
 @description('Azure region for resources')
 param location string = resourceGroup().location
 
-@description('Environment tag (dev, staging, prod)')
-param environment string = 'dev'
+@description('Environment name (dev, staging, prod)')
+param environment string
+
+@description('Whether this is the first deployment (no existing revisions)')
+param isFirstDeployment bool = true
 
 @description('Tags to apply to all resources')
 param tags object = {
-  environment: environment
-  application: 'react-app-shell'
+  project: 'react-app-shell'
   managedBy: 'bicep'
 }
 
@@ -83,6 +85,8 @@ module containerApp 'modules/container-app.bicep' = {
     revisionSuffix: revisionSuffix
     trafficWeight: trafficWeight
     revisionLabel: revisionLabel
+    isFirstDeployment: isFirstDeployment
+    environment: environment
     tags: tags
   }
 }

@@ -20,13 +20,16 @@ param imageReference string
 @description('Revision suffix for this deployment')
 param revisionSuffix string
 
-@description('Traffic weight for this revision (0-100)')
+@description('Traffic weight for the new revision (0-100)')
 @minValue(0)
 @maxValue(100)
-param trafficWeight int = 100
+param trafficWeight int
 
-@description('Label for this revision (e.g., blue, green)')
-param revisionLabel string = 'active'
+@description('Label for the revision (blue or green)')
+param revisionLabel string
+
+@description('Whether this is the first deployment (no existing revisions)')
+param isFirstDeployment bool
 
 @description('Tags to apply to resources')
 param tags object = {}
@@ -46,7 +49,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
         traffic: [
           {
             revisionName: '${containerAppName}--${revisionSuffix}'
-            weight: trafficWeight
+            weight: isFirstDeployment ? 100 : trafficWeight
             label: revisionLabel
           }
         ]
