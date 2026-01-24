@@ -49,9 +49,13 @@ Configure the following secrets in your GitHub repository (Settings → Secrets 
 
 **Environment-specific secrets** (configure per environment: dev, staging, prod):
 - `AZURE_RESOURCE_GROUP_NAME`: Name of the resource group
-- `AZURE_REGION`: Azure region (e.g., eastus, westeurope)
+- `AZURE_REGION`: Azure region (e.g., eastus, westeurope, northeurope)
 - `AZURE_CONTAINER_APPS_ENVIRONMENT_NAME`: Name for the Container Apps Environment
 - `AZURE_CONTAINER_APP_NAME`: Name for the Container App
+
+**Important:** These must be configured as **Environment secrets** (not Environment variables) in GitHub:
+- Go to Settings → Environments → [environment-name] → Environment secrets
+- Add each secret with its value for that specific environment
 
 ## Deployment
 

@@ -184,9 +184,9 @@ jobs:
       - name: Azure Login via OIDC
         uses: azure/login@v1
         with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Determine revision label
         id: revision_label
@@ -196,8 +196,8 @@ jobs:
           else
             # Auto-determine based on current active revision
             CURRENT_LABEL=$(az containerapp revision list \
-              --name ${{ vars.AZURE_CONTAINER_APP_NAME }} \
-              --resource-group ${{ vars.AZURE_RESOURCE_GROUP_NAME }} \
+              --name ${{ secrets.AZURE_CONTAINER_APP_NAME }} \
+              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_NAME }} \
               --query "[?properties.trafficWeight>0].properties.template.revisionSuffix | [0]" \
               --output tsv 2>/dev/null || echo "")
             
@@ -227,10 +227,10 @@ jobs:
       - name: Debug environment variables
         run: |
           echo "Environment: ${{ needs.build.outputs.environment }}"
-          echo "AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}"
-          echo "AZURE_CONTAINER_APPS_ENVIRONMENT_NAME: ${{ vars.AZURE_CONTAINER_APPS_ENVIRONMENT_NAME }}"
-          echo "AZURE_CONTAINER_APP_NAME: ${{ vars.AZURE_CONTAINER_APP_NAME }}"
-          echo "AZURE_REGION: ${{ vars.AZURE_REGION }}"
+          echo "AZURE_RESOURCE_GROUP_NAME: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}"
+          echo "AZURE_CONTAINER_APPS_ENVIRONMENT_NAME: ${{ secrets.AZURE_CONTAINER_APPS_ENVIRONMENT_NAME }}"
+          echo "AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}"
+          echo "AZURE_REGION: ${{ secrets.AZURE_REGION }}"
           echo "Image reference: ${{ needs.build.outputs.image_tag }}"
           echo "Revision suffix: ${{ steps.revision.outputs.suffix }}"
 
@@ -239,16 +239,16 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           scope: resourcegroup
-          resourceGroupName: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          resourceGroupName: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template: ./infra/azure/main.bicep
           parameters: >
-            environmentName=${{ vars.AZURE_CONTAINER_APPS_ENVIRONMENT_NAME }}
-            containerAppName=${{ vars.AZURE_CONTAINER_APP_NAME }}
+            environmentName=${{ secrets.AZURE_CONTAINER_APPS_ENVIRONMENT_NAME }}
+            containerAppName=${{ secrets.AZURE_CONTAINER_APP_NAME }}
             imageReference=${{ needs.build.outputs.image_tag }}
             revisionSuffix=${{ steps.revision.outputs.suffix }}
             trafficWeight=${{ steps.traffic.outputs.weight }}
             revisionLabel=${{ steps.revision_label.outputs.label }}
-            location=${{ vars.AZURE_REGION }}
+            location=${{ secrets.AZURE_REGION }}
             environment=${{ needs.build.outputs.environment }}
           failOnStdErr: false
 
@@ -356,16 +356,16 @@ jobs:
       - name: Azure Login via OIDC
         uses: azure/login@v1
         with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Get current traffic distribution
         id: current_traffic
         run: |
           az containerapp ingress traffic show \
             --name ${{ needs.deploy.outputs.container_app_name }} \
-            --resource-group ${{ vars.AZURE_RESOURCE_GROUP_NAME }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_NAME }} \
             --output json > current_traffic.json
           
           cat current_traffic.json
@@ -380,7 +380,7 @@ jobs:
           
           az containerapp ingress traffic set \
             --name ${{ needs.deploy.outputs.container_app_name }} \
-            --resource-group ${{ vars.AZURE_RESOURCE_GROUP_NAME }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_NAME }} \
             --revision-weight $REVISION_NAME=100
           
           echo "✅ Traffic switch complete"
