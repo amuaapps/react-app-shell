@@ -56,6 +56,13 @@ param environment string
 @description('Whether this is the first deployment (no existing revisions)')
 param isFirstDeployment bool = true
 
+@description('Container registry username (GitHub username)')
+param registryUsername string
+
+@description('Container registry password (GitHub token)')
+@secure()
+param registryPassword string
+
 @description('Tags to apply to all resources')
 param tags object = {
   project: 'react-app-shell'
@@ -87,6 +94,8 @@ module containerApp 'modules/container-app.bicep' = {
     revisionLabel: revisionLabel
     isFirstDeployment: isFirstDeployment
     environment: environment
+    registryUsername: registryUsername
+    registryPassword: registryPassword
     tags: tags
   }
 }

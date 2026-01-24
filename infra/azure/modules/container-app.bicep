@@ -34,6 +34,13 @@ param isFirstDeployment bool
 @description('Environment name (dev, staging, prod)')
 param environment string
 
+@description('Container registry username')
+param registryUsername string
+
+@description('Container registry password')
+@secure()
+param registryPassword string
+
 @description('Tags to apply to resources')
 param tags object = {}
 
@@ -62,7 +69,14 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
       registries: [
         {
           server: split(imageReference, '/')[0]
-          identity: 'system'
+          username: registryUsername
+          passwordSecretRef: 'registry-password'
+        }
+      ]
+      secrets: [
+        {
+          name: 'registry-password'
+          value: registryPassword
         }
       ]
     }
@@ -93,9 +107,6 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
         ]
       }
     }
-  }
-  identity: {
-    type: 'SystemAssigned'
   }
 }
 
