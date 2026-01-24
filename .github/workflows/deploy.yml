@@ -139,12 +139,6 @@ jobs:
             echo "environment=dev" >> $GITHUB_OUTPUT
           fi
 
-      - name: Print environment diagnostics
-        run: |
-          echo "Node version: $(node -v)"
-          echo "npm version: $(npm -v)"
-          echo "Environment: ${{ steps.env.outputs.environment }}"
-
       - name: Print build diagnostics
         run: |
           echo "Node version: $(node -v)"
