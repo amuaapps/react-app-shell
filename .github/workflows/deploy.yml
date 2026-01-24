@@ -224,6 +224,16 @@ jobs:
             echo "weight=0" >> $GITHUB_OUTPUT
           fi
 
+      - name: Debug environment variables
+        run: |
+          echo "Environment: ${{ needs.build.outputs.environment }}"
+          echo "AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}"
+          echo "AZURE_CONTAINER_APPS_ENVIRONMENT_NAME: ${{ vars.AZURE_CONTAINER_APPS_ENVIRONMENT_NAME }}"
+          echo "AZURE_CONTAINER_APP_NAME: ${{ vars.AZURE_CONTAINER_APP_NAME }}"
+          echo "AZURE_REGION: ${{ vars.AZURE_REGION }}"
+          echo "Image reference: ${{ needs.build.outputs.image_tag }}"
+          echo "Revision suffix: ${{ steps.revision.outputs.suffix }}"
+
       - name: Deploy Bicep template
         id: deploy
         uses: azure/arm-deploy@v1
