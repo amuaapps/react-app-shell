@@ -258,7 +258,7 @@ jobs:
             revisionLabel=${{ steps.revision_label.outputs.label }}
             isFirstDeployment=true
             registryUsername=${{ github.actor }}
-            registryPassword=${{ secrets.GITHUB_TOKEN }}
+            registryPassword=${{ secrets.NPM_PACKAGE_TOKEN }}
             location=${{ vars.AZURE_REGION }}
             environment=${{ needs.build.outputs.environment }}
           failOnStdErr: false
