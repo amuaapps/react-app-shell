@@ -278,14 +278,24 @@ jobs:
             environment=${{ needs.build.outputs.environment }}
           failOnStdErr: false
 
+      - name: Debug deployment outputs
+        run: |
+          echo "=== Raw ARM Deployment Outputs ==="
+          echo "All step outputs:"
+          echo "${{ toJSON(steps.deploy.outputs) }}"
+          echo ""
+          echo "=== Individual Outputs ==="
+          echo "activeUrl: '${{ steps.deploy.outputs.activeUrl }}'"
+          echo "revisionUrl: '${{ steps.deploy.outputs.revisionUrl }}'"
+          echo "latestRevisionName: '${{ steps.deploy.outputs.latestRevisionName }}'"
+          echo "containerAppName: '${{ steps.deploy.outputs.containerAppName }}'"
+          echo ""
+          echo "=== Job Outputs (what verify will receive) ==="
+          echo "active_url: '${{ steps.deploy.outputs.activeUrl }}'"
+          echo "revision_url: '${{ steps.deploy.outputs.revisionUrl }}'"
+      
       - name: Output deployment info
         run: |
-          echo "Debug - All deployment outputs:"
-          echo "activeUrl: ${{ steps.deploy.outputs.activeUrl }}"
-          echo "revisionUrl: ${{ steps.deploy.outputs.revisionUrl }}"
-          echo "latestRevisionName: ${{ steps.deploy.outputs.latestRevisionName }}"
-          echo "containerAppName: ${{ steps.deploy.outputs.containerAppName }}"
-          
           echo "### 🚀 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** ${{ needs.build.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
@@ -305,6 +315,17 @@ jobs:
     needs: [build, deploy]
     
     steps:
+      - name: Debug verify inputs
+        run: |
+          echo "=== Verify Job Inputs ==="
+          echo "All deploy outputs:"
+          echo "${{ toJSON(needs.deploy.outputs) }}"
+          echo ""
+          echo "revision_url: '${{ needs.deploy.outputs.revision_url }}'"
+          echo "active_url: '${{ needs.deploy.outputs.active_url }}'"
+          echo "revision_name: '${{ needs.deploy.outputs.revision_name }}'"
+          echo "container_app_name: '${{ needs.deploy.outputs.container_app_name }}'"
+
       - name: Wait for deployment to stabilize
         run: |
           echo "Waiting 30s for deployment to stabilize..."
