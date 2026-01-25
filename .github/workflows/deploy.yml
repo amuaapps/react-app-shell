@@ -232,6 +232,22 @@ jobs:
           REVISION_SUFFIX="${{ steps.revision_label.outputs.label }}-$(date +%Y%m%d-%H%M%S)"
           echo "suffix=$REVISION_SUFFIX" >> $GITHUB_OUTPUT
 
+      - name: Check if Container App exists
+        id: check_app
+        run: |
+          APP_EXISTS=$(az containerapp show \
+            --name ${{ secrets.AZURE_CONTAINER_APP_NAME }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_NAME }} \
+            --query "name" -o tsv 2>/dev/null || echo "")
+          
+          if [ -z "$APP_EXISTS" ]; then
+            echo "Container App does not exist - this is the first deployment"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "Container App exists - this is a subsequent deployment"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Determine traffic weight
         id: traffic
         run: |
