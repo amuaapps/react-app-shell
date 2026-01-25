@@ -266,7 +266,7 @@ jobs:
             revisionSuffix=${{ steps.revision.outputs.suffix }}
             trafficWeight=${{ steps.traffic.outputs.weight }}
             revisionLabel=${{ steps.revision_label.outputs.label }}
-            isFirstDeployment=true
+            isFirstDeployment=false
             registryUsername=${{ github.actor }}
             registryPassword=${{ secrets.NPM_PACKAGE_TOKEN }}
             location=${{ vars.AZURE_REGION }}
