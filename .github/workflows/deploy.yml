@@ -253,8 +253,13 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "weight=${{ inputs.initial_traffic_weight }}" >> $GITHUB_OUTPUT
+          elif [ "${{ steps.check_app.outputs.exists }}" == "false" ]; then
+            # First deployment - use 100% traffic
+            echo "First deployment detected - using 100% traffic"
+            echo "weight=100" >> $GITHUB_OUTPUT
           else
-            # Auto-deploy with 0% traffic for testing
+            # Subsequent deployment - use 0% traffic for blue/green testing
+            echo "Subsequent deployment - using 0% traffic for blue/green"
             echo "weight=0" >> $GITHUB_OUTPUT
           fi
 
