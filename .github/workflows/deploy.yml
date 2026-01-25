@@ -281,10 +281,21 @@ jobs:
       - name: Capture deployment outputs
         id: capture
         run: |
-          echo "active_url=${{ steps.deploy.outputs.activeUrl }}" >> $GITHUB_OUTPUT
-          echo "revision_url=${{ steps.deploy.outputs.revisionUrl }}" >> $GITHUB_OUTPUT
-          echo "revision_name=${{ steps.deploy.outputs.latestRevisionName }}" >> $GITHUB_OUTPUT
-          echo "container_app_name=${{ steps.deploy.outputs.containerAppName }}" >> $GITHUB_OUTPUT
+          ACTIVE_URL="${{ steps.deploy.outputs.activeUrl }}"
+          REVISION_URL="${{ steps.deploy.outputs.revisionUrl }}"
+          REVISION_NAME="${{ steps.deploy.outputs.latestRevisionName }}"
+          CONTAINER_APP_NAME="${{ steps.deploy.outputs.containerAppName }}"
+          
+          echo "active_url=${ACTIVE_URL}" >> $GITHUB_OUTPUT
+          echo "revision_url=${REVISION_URL}" >> $GITHUB_OUTPUT
+          echo "revision_name=${REVISION_NAME}" >> $GITHUB_OUTPUT
+          echo "container_app_name=${CONTAINER_APP_NAME}" >> $GITHUB_OUTPUT
+          
+          echo "Captured to GITHUB_OUTPUT:"
+          echo "  active_url=${ACTIVE_URL}"
+          echo "  revision_url=${REVISION_URL}"
+          echo "  revision_name=${REVISION_NAME}"
+          echo "  container_app_name=${CONTAINER_APP_NAME}"
 
       - name: Debug deployment outputs
         run: |
