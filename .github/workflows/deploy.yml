@@ -195,10 +195,10 @@ jobs:
     needs: build
     environment: ${{ needs.build.outputs.environment }}
     outputs:
-      active_url: ${{ steps.deploy.outputs.activeUrl }}
-      revision_url: ${{ steps.deploy.outputs.revisionUrl }}
-      revision_name: ${{ steps.deploy.outputs.latestRevisionName }}
-      container_app_name: ${{ steps.deploy.outputs.containerAppName }}
+      active_url: ${{ steps.capture.outputs.active_url }}
+      revision_url: ${{ steps.capture.outputs.revision_url }}
+      revision_name: ${{ steps.capture.outputs.revision_name }}
+      container_app_name: ${{ steps.capture.outputs.container_app_name }}
     
     steps:
       - name: Checkout code
@@ -278,6 +278,14 @@ jobs:
             environment=${{ needs.build.outputs.environment }}
           failOnStdErr: false
 
+      - name: Capture deployment outputs
+        id: capture
+        run: |
+          echo "active_url=${{ steps.deploy.outputs.activeUrl }}" >> $GITHUB_OUTPUT
+          echo "revision_url=${{ steps.deploy.outputs.revisionUrl }}" >> $GITHUB_OUTPUT
+          echo "revision_name=${{ steps.deploy.outputs.latestRevisionName }}" >> $GITHUB_OUTPUT
+          echo "container_app_name=${{ steps.deploy.outputs.containerAppName }}" >> $GITHUB_OUTPUT
+
       - name: Debug deployment outputs
         run: |
           echo "=== Raw ARM Deployment Outputs ==="
@@ -290,9 +298,9 @@ jobs:
           echo "latestRevisionName: '${{ steps.deploy.outputs.latestRevisionName }}'"
           echo "containerAppName: '${{ steps.deploy.outputs.containerAppName }}'"
           echo ""
-          echo "=== Job Outputs (what verify will receive) ==="
-          echo "active_url: '${{ steps.deploy.outputs.activeUrl }}'"
-          echo "revision_url: '${{ steps.deploy.outputs.revisionUrl }}'"
+          echo "=== Captured Outputs ==="
+          echo "active_url: '${{ steps.capture.outputs.active_url }}'"
+          echo "revision_url: '${{ steps.capture.outputs.revision_url }}'"
       
       - name: Output deployment info
         run: |
