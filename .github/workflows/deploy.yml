@@ -406,23 +406,23 @@ jobs:
       - name: Basic smoke tests
         if: steps.health_check.outputs.healthy == 'true'
         run: |
-          REVISION_URL="${{ needs.deploy.outputs.revision_url }}"
+          REVISION_URL="${{ steps.load_outputs.outputs.revision_url }}"
           
           echo "Running smoke tests..."
           
-          # Test health endpoint
-          if curl -f -s "$REVISION_URL/health" | grep -q "healthy"; then
-            echo "✅ Health endpoint working"
+          # Test main page returns HTML with React root
+          RESPONSE=$(curl -f -s "$REVISION_URL")
+          if echo "$RESPONSE" | grep -q "<html"; then
+            echo "✅ Main page returns HTML"
           else
-            echo "❌ Health endpoint failed"
+            echo "❌ Main page failed to return HTML"
             exit 1
           fi
           
-          # Test main page returns HTML
-          if curl -f -s "$REVISION_URL" | grep -q "<html"; then
-            echo "✅ Main page returns HTML"
+          if echo "$RESPONSE" | grep -q "root"; then
+            echo "✅ React root element found"
           else
-            echo "❌ Main page failed"
+            echo "❌ React root element not found"
             exit 1
           fi
           
