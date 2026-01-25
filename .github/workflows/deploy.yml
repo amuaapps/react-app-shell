@@ -195,10 +195,10 @@ jobs:
     needs: build
     environment: ${{ needs.build.outputs.environment }}
     outputs:
-      active_url: ${{ steps.capture.outputs.active_url }}
-      revision_url: ${{ steps.capture.outputs.revision_url }}
-      revision_name: ${{ steps.capture.outputs.revision_name }}
-      container_app_name: ${{ steps.capture.outputs.container_app_name }}
+      active_url: ${{ steps.set_outputs.outputs.active_url }}
+      revision_url: ${{ steps.set_outputs.outputs.revision_url }}
+      revision_name: ${{ steps.set_outputs.outputs.revision_name }}
+      container_app_name: ${{ steps.set_outputs.outputs.container_app_name }}
     
     steps:
       - name: Checkout code
@@ -324,6 +324,18 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Active URL:** ${{ steps.deploy.outputs.activeUrl }}" >> $GITHUB_STEP_SUMMARY
           echo "**Revision URL:** ${{ steps.deploy.outputs.revisionUrl }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Set job outputs
+        id: set_outputs
+        run: |
+          echo "active_url=${{ steps.deploy.outputs.activeUrl }}" >> $GITHUB_OUTPUT
+          echo "revision_url=${{ steps.deploy.outputs.revisionUrl }}" >> $GITHUB_OUTPUT
+          echo "revision_name=${{ steps.deploy.outputs.latestRevisionName }}" >> $GITHUB_OUTPUT
+          echo "container_app_name=${{ steps.deploy.outputs.containerAppName }}" >> $GITHUB_OUTPUT
+          
+          echo "Final job outputs set:"
+          echo "  active_url=${{ steps.deploy.outputs.activeUrl }}"
+          echo "  revision_url=${{ steps.deploy.outputs.revisionUrl }}"
 
   # ============================================================================
   # Stage 4: Verify Deployment
