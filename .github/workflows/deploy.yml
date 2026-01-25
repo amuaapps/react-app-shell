@@ -194,11 +194,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment: ${{ needs.build.outputs.environment }}
-    outputs:
-      active_url: ${{ steps.set_outputs.outputs.active_url }}
-      revision_url: ${{ steps.set_outputs.outputs.revision_url }}
-      revision_name: ${{ steps.set_outputs.outputs.revision_name }}
-      container_app_name: ${{ steps.set_outputs.outputs.container_app_name }}
     
     steps:
       - name: Checkout code
@@ -325,17 +320,26 @@ jobs:
           echo "**Active URL:** ${{ steps.deploy.outputs.activeUrl }}" >> $GITHUB_STEP_SUMMARY
           echo "**Revision URL:** ${{ steps.deploy.outputs.revisionUrl }}" >> $GITHUB_STEP_SUMMARY
 
-      - name: Set job outputs
-        id: set_outputs
+      - name: Save deployment outputs to file
         run: |
-          echo "active_url=${{ steps.deploy.outputs.activeUrl }}" >> $GITHUB_OUTPUT
-          echo "revision_url=${{ steps.deploy.outputs.revisionUrl }}" >> $GITHUB_OUTPUT
-          echo "revision_name=${{ steps.deploy.outputs.latestRevisionName }}" >> $GITHUB_OUTPUT
-          echo "container_app_name=${{ steps.deploy.outputs.containerAppName }}" >> $GITHUB_OUTPUT
+          mkdir -p deployment-outputs
+          echo "${{ steps.deploy.outputs.activeUrl }}" > deployment-outputs/active_url.txt
+          echo "${{ steps.deploy.outputs.revisionUrl }}" > deployment-outputs/revision_url.txt
+          echo "${{ steps.deploy.outputs.latestRevisionName }}" > deployment-outputs/revision_name.txt
+          echo "${{ steps.deploy.outputs.containerAppName }}" > deployment-outputs/container_app_name.txt
           
-          echo "Final job outputs set:"
-          echo "  active_url=${{ steps.deploy.outputs.activeUrl }}"
-          echo "  revision_url=${{ steps.deploy.outputs.revisionUrl }}"
+          echo "Saved deployment outputs to files:"
+          cat deployment-outputs/active_url.txt
+          cat deployment-outputs/revision_url.txt
+          cat deployment-outputs/revision_name.txt
+          cat deployment-outputs/container_app_name.txt
+
+      - name: Upload deployment outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-outputs
+          path: deployment-outputs/
+          retention-days: 1
 
   # ============================================================================
   # Stage 4: Verify Deployment
@@ -346,16 +350,27 @@ jobs:
     needs: [build, deploy]
     
     steps:
-      - name: Debug verify inputs
+      - name: Download deployment outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-outputs
+          path: deployment-outputs/
+
+      - name: Load deployment outputs
+        id: load_outputs
         run: |
-          echo "=== Verify Job Inputs ==="
-          echo "All deploy outputs:"
-          echo "${{ toJSON(needs.deploy.outputs) }}"
-          echo ""
-          echo "revision_url: '${{ needs.deploy.outputs.revision_url }}'"
-          echo "active_url: '${{ needs.deploy.outputs.active_url }}'"
-          echo "revision_name: '${{ needs.deploy.outputs.revision_name }}'"
-          echo "container_app_name: '${{ needs.deploy.outputs.container_app_name }}'"
+          ACTIVE_URL=$(cat deployment-outputs/active_url.txt)
+          REVISION_URL=$(cat deployment-outputs/revision_url.txt)
+          REVISION_NAME=$(cat deployment-outputs/revision_name.txt)
+          CONTAINER_APP_NAME=$(cat deployment-outputs/container_app_name.txt)
+          
+          echo "Loaded deployment outputs:"
+          echo "  active_url: $ACTIVE_URL"
+          echo "  revision_url: $REVISION_URL"
+          echo "  revision_name: $REVISION_NAME"
+          echo "  container_app_name: $CONTAINER_APP_NAME"
+          
+          echo "revision_url=$REVISION_URL" >> $GITHUB_OUTPUT
 
       - name: Wait for deployment to stabilize
         run: |
@@ -365,7 +380,7 @@ jobs:
       - name: Health check - Revision URL
         id: health_check
         run: |
-          REVISION_URL="${{ needs.deploy.outputs.revision_url }}"
+          REVISION_URL="${{ steps.load_outputs.outputs.revision_url }}"
           echo "Testing revision URL: $REVISION_URL"
           
           for i in {1..10}; do
