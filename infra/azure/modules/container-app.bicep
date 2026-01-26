@@ -50,8 +50,8 @@ param externalIngress bool = true
 @description('Container port')
 param targetPort int = 80
 
-@description('CPU cores')
-param cpu float = 0.25
+@description('CPU cores (e.g., 0.25, 0.5, 1.0)')
+param cpu string = '0.25'
 
 @description('Memory (e.g., 0.5Gi, 1Gi)')
 param memory string = '0.5Gi'
@@ -117,7 +117,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'app'
           image: imageReference
           resources: {
-            cpu: cpu
+            cpu: json(cpu)
             memory: memory
           }
           env: [
