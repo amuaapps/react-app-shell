@@ -268,7 +268,7 @@ jobs:
           AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
           AZURE_REGION: ${{ vars.AZURE_REGION }}
           REGISTRY_USERNAME: ${{ github.actor }}
-          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_PASSWORD: ${{ secrets.NPM_PACKAGE_TOKEN }}
           PROJECT_NAME: react-app-shell
 
       - name: Upload deployment outputs
