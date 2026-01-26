@@ -49,44 +49,21 @@ class RemoteAppErrorBoundary extends Component<
   render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <div
-          className="remote-app-error"
-          style={{
-            padding: 'var(--space-8)',
-            textAlign: 'center',
-          }}
-        >
-          <div
-            style={{
-              maxWidth: '600px',
-              margin: '0 auto',
-              padding: 'var(--space-6)',
-              backgroundColor: 'var(--destructive)',
-              color: 'var(--destructive-foreground)',
-              borderRadius: 'var(--radius)',
-              border: '1px solid var(--border)',
-            }}
-          >
-            <h2 style={{ marginBottom: 'var(--space-4)' }}>
+        <div className="remote-app-error p-8 text-center">
+          <div className="max-w-[600px] mx-auto p-6 bg-destructive text-destructive-foreground rounded-[var(--radius)] border border-border">
+            <h2 className="mb-4 text-2xl font-semibold">
               Application Error
             </h2>
-            <p style={{ marginBottom: 'var(--space-4)' }}>
+            <p className="mb-4">
               The <strong>{this.props.remoteName}</strong> application
               encountered an error and could not be loaded.
             </p>
-            <p style={{ marginBottom: 'var(--space-4)', fontSize: '0.875rem' }}>
+            <p className="mb-4 text-sm">
               {this.state.error?.message || 'An unknown error occurred'}
             </p>
             <button
               onClick={() => window.location.reload()}
-              style={{
-                padding: 'var(--space-2) var(--space-4)',
-                backgroundColor: 'var(--background)',
-                color: 'var(--foreground)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius)',
-                cursor: 'pointer',
-              }}
+              className="px-4 py-2 bg-background text-foreground border border-border rounded-[var(--radius)] cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
             >
               Reload Page
             </button>

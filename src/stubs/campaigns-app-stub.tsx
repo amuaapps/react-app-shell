@@ -26,33 +26,33 @@ export const campaignsAppStub: RemoteAppInstance = {
       container.innerHTML = `
         <div class="p-8">
           <div class="max-w-4xl mx-auto">
-            <div class="bg-green-50 border-2 border-green-200 rounded-lg p-6 mb-6">
-              <h1 class="text-3xl font-bold text-green-900 mb-2">Campaigns App Placeholder</h1>
-              <p class="text-green-700 mb-4">
+            <div class="bg-secondary/10 border-2 border-secondary rounded-lg p-6 mb-6">
+              <h1 class="text-3xl font-bold text-foreground mb-2">Campaigns App Placeholder</h1>
+              <p class="text-muted-foreground mb-4">
                 This is a local development stub. The real campaigns app will be loaded from a
                 remote entry point in production.
               </p>
-              <p class="text-sm text-green-600">
-                Current route: <code class="bg-green-100 px-2 py-1 rounded">${initialPath}</code>
+              <p class="text-sm text-muted-foreground">
+                Current route: <code class="bg-muted px-2 py-1 rounded">${initialPath}</code>
               </p>
             </div>
             <div class="space-y-4">
-              <div class="bg-white border border-gray-200 rounded-lg p-6">
+              <div class="bg-card border border-border rounded-lg p-6">
                 <h2 class="text-xl font-semibold mb-3">Navigation Demo</h2>
-                <p class="text-gray-600 mb-4">
+                <p class="text-muted-foreground mb-4">
                   Click the links below to test navigation within the campaigns app:
                 </p>
                 <div class="flex flex-wrap gap-3">
-                  <button data-nav="/campaigns" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                  <button data-nav="/campaigns" class="px-4 py-2 bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">
                     Campaigns Home
                   </button>
-                  <button data-nav="/campaigns/list" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                  <button data-nav="/campaigns/list" class="px-4 py-2 bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">
                     Campaign List
                   </button>
-                  <button data-nav="/campaigns/create" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                  <button data-nav="/campaigns/create" class="px-4 py-2 bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 transition-colors">
                     Create Campaign
                   </button>
-                  <button data-nav="/" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                  <button data-nav="/" class="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors">
                     ← Back to Core
                   </button>
                 </div>
