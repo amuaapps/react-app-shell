@@ -8,6 +8,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { RemoteAppInstance } from '@/lib/remote-app-contract';
+import { reportError } from '@/lib/error-reporter';
 import RemoteAppErrorBoundary from './RemoteAppErrorBoundary';
 
 interface RemoteAppMountProps {
@@ -57,7 +58,10 @@ export default function RemoteAppMount({
         });
 
         if (!result.success) {
-          console.error(`Failed to mount remote app "${name}":`, result.error);
+          reportError(`Failed to mount remote app "${name}"`, result.error, {
+            remoteName: name,
+            basePath,
+          });
           return;
         }
 
@@ -66,7 +70,10 @@ export default function RemoteAppMount({
           ? () => remoteApp.unmount!()
           : null;
       } catch (error) {
-        console.error(`Failed to mount remote app "${name}":`, error);
+        reportError(`Failed to mount remote app "${name}"`, error, {
+          remoteName: name,
+          basePath,
+        });
       }
     };
 

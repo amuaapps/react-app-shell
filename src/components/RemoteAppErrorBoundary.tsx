@@ -1,4 +1,5 @@
 import React, { Component, ReactNode } from 'react';
+import { reportError } from '../lib/error-reporter';
 
 interface RemoteAppErrorBoundaryProps {
   children: ReactNode;
@@ -35,12 +36,11 @@ class RemoteAppErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    // Log error for debugging
-    console.error(
-      `Error in remote app "${this.props.remoteName}":`,
-      error,
-      errorInfo
-    );
+    // Report error via abstraction (no-op in production by default)
+    reportError(`Error in remote app "${this.props.remoteName}"`, error, {
+      remoteName: this.props.remoteName,
+      componentStack: errorInfo.componentStack,
+    });
 
     // Call optional error callback
     this.props.onError?.(error, errorInfo);
