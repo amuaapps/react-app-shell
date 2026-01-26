@@ -38,21 +38,29 @@ fi
 REVISION_SUFFIX="${CANDIDATE_LABEL}-$(date +%Y%m%d-%H%M%S)"
 
 # Fetch existing traffic rules to preserve live traffic safely
-# Filter out any rules with the candidate label to avoid conflicts
-EXISTING_TRAFFIC_JSON="[]"
-if az containerapp show --name "$AZURE_CONTAINER_APP_NAME" --resource-group "$AZURE_RESOURCE_GROUP_NAME" >/dev/null 2>&1; then
-  EXISTING_TRAFFIC_JSON="$(az containerapp ingress traffic show \
-    --name "$AZURE_CONTAINER_APP_NAME" \
-    --resource-group "$AZURE_RESOURCE_GROUP_NAME" -o json | \
-    jq --arg label "$CANDIDATE_LABEL" '[.[] | select(.label != $label)]')"
+EXISTING_TRAFFIC_JSON="$(az containerapp show \
+  --name "$AZURE_CONTAINER_APP_NAME" \
+  --resource-group "$AZURE_RESOURCE_GROUP_NAME" \
+  --query 'properties.configuration.ingress.traffic' \
+  -o json 2>/dev/null || echo '[]')"
+
+# Filter out the candidate label from existing traffic to avoid conflicts
+EXISTING_TRAFFIC_JSON="$(echo "$EXISTING_TRAFFIC_JSON" | jq --arg label "$CANDIDATE_LABEL" '[.[] | select(.label != $label)]')"
+
+# Determine candidate weight: 100 for first deployment, 0 for subsequent
+if [ -z "$BLUE_REVISION" ]; then
+  CANDIDATE_WEIGHT=100
+  echo "First deployment detected - setting candidate weight to 100%"
+else
+  CANDIDATE_WEIGHT=0
+  echo "Existing deployment detected - setting candidate weight to 0%"
 fi
 
-DEPLOYMENT_NAME="deploy-${AZURE_CONTAINER_APP_NAME}-${REVISION_SUFFIX}"
-
-echo "Deploying GREEN revision (0% traffic) via Bicep:"
+echo "Deploying GREEN revision via Bicep:"
 echo "  app: $AZURE_CONTAINER_APP_NAME"
 echo "  env: $ENVIRONMENT"
 echo "  label: $CANDIDATE_LABEL"
+echo "  weight: ${CANDIDATE_WEIGHT}%"
 echo "  revisionSuffix: $REVISION_SUFFIX"
 echo "  blueRevision: ${BLUE_REVISION:-<none>}"
 
@@ -70,7 +78,7 @@ az deployment group create \
       imageReference="$IMAGE_REF" \
       revisionSuffix="$REVISION_SUFFIX" \
       candidateLabel="$CANDIDATE_LABEL" \
-      candidateWeight=0 \
+      candidateWeight="$CANDIDATE_WEIGHT" \
       existingTraffic="$EXISTING_TRAFFIC_JSON" \
       registryUsername="$REGISTRY_USERNAME" \
       registryPassword="$REGISTRY_PASSWORD" \
