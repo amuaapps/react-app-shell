@@ -374,8 +374,6 @@ jobs:
         run: |
           echo "::error::Deployment verification failed. Rolling back to BLUE..."
           
-          BLUE_ID="${{ needs.deploy_azure.outputs.blue_id }}"
-          
           if [ -z "$BLUE_ID" ]; then
             echo "::warning::No BLUE revision to rollback to (first deployment)"
             exit 0
