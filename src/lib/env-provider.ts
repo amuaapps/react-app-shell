@@ -1,11 +1,11 @@
 /**
  * Environment variable provider abstraction
- * 
+ *
  * Provides a unified interface for accessing environment variables that works in:
  * - Vite runtime (import.meta.env)
  * - Jest tests (process.env)
  * - Any other environment with custom provider
- * 
+ *
  * This allows config modules to be testable without Jest module mocking.
  */
 
@@ -74,7 +74,7 @@ if (typeof import.meta !== 'undefined' && import.meta.env) {
 /**
  * Set a custom environment provider
  * Useful for testing with specific values
- * 
+ *
  * @example
  * // In test setup:
  * setEnvProvider(new StaticEnvProvider({
@@ -95,7 +95,7 @@ export function getEnvProvider(): EnvProvider {
 /**
  * Get an environment variable value
  * Convenience function that uses the global provider
- * 
+ *
  * @param key - The environment variable key (without VITE_ prefix)
  * @returns The value or undefined if not set
  */

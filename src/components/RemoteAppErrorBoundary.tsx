@@ -51,9 +51,7 @@ class RemoteAppErrorBoundary extends Component<
       return (
         <div className="remote-app-error p-8 text-center">
           <div className="max-w-[600px] mx-auto p-6 bg-destructive text-destructive-foreground rounded-[var(--radius)] border border-border">
-            <h2 className="mb-4 text-2xl font-semibold">
-              Application Error
-            </h2>
+            <h2 className="mb-4 text-2xl font-semibold">Application Error</h2>
             <p className="mb-4">
               The <strong>{this.props.remoteName}</strong> application
               encountered an error and could not be loaded.

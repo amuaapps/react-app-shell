@@ -53,7 +53,8 @@ export function getRemoteConfig(): RemoteConfig {
       getEnv('CORE_REMOTE_ENTRY_URL') || DEFAULT_CONFIG.coreRemoteEntryUrl,
 
     campaignsRemoteEntryUrl:
-      getEnv('CAMPAIGNS_REMOTE_ENTRY_URL') || DEFAULT_CONFIG.campaignsRemoteEntryUrl,
+      getEnv('CAMPAIGNS_REMOTE_ENTRY_URL') ||
+      DEFAULT_CONFIG.campaignsRemoteEntryUrl,
   };
 }
 

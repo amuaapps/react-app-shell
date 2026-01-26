@@ -4,7 +4,11 @@ import {
   getRemoteUrl,
   isValidRemoteUrl,
 } from '@/config/remotes';
-import { setEnvProvider, StaticEnvProvider, getEnvProvider } from '@/lib/env-provider';
+import {
+  setEnvProvider,
+  StaticEnvProvider,
+  getEnvProvider,
+} from '@/lib/env-provider';
 
 describe('Remote Configuration', () => {
   let originalProvider: ReturnType<typeof getEnvProvider>;
@@ -43,8 +47,12 @@ describe('Remote Configuration', () => {
 
       const config = getRemoteConfig();
 
-      expect(config.coreRemoteEntryUrl).toBe('https://core.example.com/entry.js');
-      expect(config.campaignsRemoteEntryUrl).toBe('https://campaigns.example.com/entry.js');
+      expect(config.coreRemoteEntryUrl).toBe(
+        'https://core.example.com/entry.js'
+      );
+      expect(config.campaignsRemoteEntryUrl).toBe(
+        'https://campaigns.example.com/entry.js'
+      );
     });
 
     it('should fall back to defaults for missing env vars', () => {
@@ -57,7 +65,9 @@ describe('Remote Configuration', () => {
 
       const config = getRemoteConfig();
 
-      expect(config.coreRemoteEntryUrl).toBe('https://core.example.com/entry.js');
+      expect(config.coreRemoteEntryUrl).toBe(
+        'https://core.example.com/entry.js'
+      );
       expect(config.campaignsRemoteEntryUrl).toContain('localhost:3003');
     });
 

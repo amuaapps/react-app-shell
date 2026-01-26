@@ -1,9 +1,9 @@
 /**
  * Error reporting abstraction for production code.
- * 
+ *
  * This is a no-op by default to keep console.* out of production bundles.
  * Can be wired to monitoring/analytics services (e.g., Sentry, DataDog) later.
- * 
+ *
  * For development debugging, use browser DevTools or a development-only adapter.
  */
 
@@ -66,7 +66,7 @@ let errorReporter: ErrorReporter = new NoOpErrorReporter();
 /**
  * Set the global error reporter implementation.
  * Call this in development mode to enable console logging.
- * 
+ *
  * @example
  * // In development entry point:
  * if (import.meta.env.DEV) {
