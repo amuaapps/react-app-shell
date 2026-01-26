@@ -56,6 +56,8 @@ else
   echo "Existing deployment detected - setting candidate weight to 0%"
 fi
 
+DEPLOYMENT_NAME="deploy-${AZURE_CONTAINER_APP_NAME}-${REVISION_SUFFIX}"
+
 echo "Deploying GREEN revision via Bicep:"
 echo "  app: $AZURE_CONTAINER_APP_NAME"
 echo "  env: $ENVIRONMENT"
@@ -64,7 +66,7 @@ echo "  weight: ${CANDIDATE_WEIGHT}%"
 echo "  revisionSuffix: $REVISION_SUFFIX"
 echo "  blueRevision: ${BLUE_REVISION:-<none>}"
 
-# Deploy infra + new revision with 0% weight
+# Deploy infra + new revision
 az deployment group create \
   --name "$DEPLOYMENT_NAME" \
   --resource-group "$AZURE_RESOURCE_GROUP_NAME" \
