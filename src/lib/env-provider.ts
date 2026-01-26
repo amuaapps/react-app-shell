@@ -50,7 +50,9 @@ function createViteEnvProvider(): EnvProvider {
     get(key: string): string | undefined {
       const viteKey = `VITE_${key}`;
       // This code only runs in Vite, so import.meta.env is safe
-      const value = (import.meta as { env?: Record<string, unknown> }).env?.[viteKey];
+      const value = (import.meta as { env?: Record<string, unknown> }).env?.[
+        viteKey
+      ];
       return typeof value === 'string' ? value : undefined;
     },
   };
