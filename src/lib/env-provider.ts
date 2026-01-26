@@ -25,7 +25,7 @@ export interface EnvProvider {
 class ViteEnvProvider implements EnvProvider {
   get(key: string): string | undefined {
     const viteKey = `VITE_${key}`;
-    const value = import.meta.env[viteKey];
+    const value = import.meta.env[viteKey] as unknown;
     return typeof value === 'string' ? value : undefined;
   }
 }

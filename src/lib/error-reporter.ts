@@ -18,7 +18,7 @@ export interface ErrorReporter {
    * @param error - The error object (if available)
    * @param context - Additional context about the error
    */
-  reportError(message: string, error?: Error | unknown, context?: ErrorContext): void;
+  reportError(message: string, error?: unknown, context?: ErrorContext): void;
 
   /**
    * Report a warning or non-critical issue.
@@ -47,13 +47,11 @@ class NoOpErrorReporter implements ErrorReporter {
  * Only used in development mode (excluded from production builds).
  */
 class ConsoleErrorReporter implements ErrorReporter {
-  reportError(message: string, error?: Error | unknown, context?: ErrorContext): void {
-    // eslint-disable-next-line no-console
+  reportError(message: string, error?: unknown, context?: ErrorContext): void {
     console.error(message, error, context);
   }
 
   reportWarning(message: string, context?: ErrorContext): void {
-    // eslint-disable-next-line no-console
     console.warn(message, context);
   }
 }
@@ -84,7 +82,7 @@ export function setErrorReporter(reporter: ErrorReporter): void {
  */
 export function reportError(
   message: string,
-  error?: Error | unknown,
+  error?: unknown,
   context?: ErrorContext
 ): void {
   errorReporter.reportError(message, error, context);
