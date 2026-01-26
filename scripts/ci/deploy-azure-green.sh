@@ -33,11 +33,13 @@ fi
 REVISION_SUFFIX="${CANDIDATE_LABEL}-$(date +%Y%m%d-%H%M%S)"
 
 # Fetch existing traffic rules to preserve live traffic safely
+# Filter out any rules with the candidate label to avoid conflicts
 EXISTING_TRAFFIC_JSON="[]"
 if az containerapp show --name "$AZURE_CONTAINER_APP_NAME" --resource-group "$AZURE_RESOURCE_GROUP_NAME" >/dev/null 2>&1; then
   EXISTING_TRAFFIC_JSON="$(az containerapp ingress traffic show \
     --name "$AZURE_CONTAINER_APP_NAME" \
-    --resource-group "$AZURE_RESOURCE_GROUP_NAME" -o json)"
+    --resource-group "$AZURE_RESOURCE_GROUP_NAME" -o json | \
+    jq --arg label "$CANDIDATE_LABEL" '[.[] | select(.label != $label)]')"
 fi
 
 DEPLOYMENT_NAME="deploy-${AZURE_CONTAINER_APP_NAME}-${REVISION_SUFFIX}"
