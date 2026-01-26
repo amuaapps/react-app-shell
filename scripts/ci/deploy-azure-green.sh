@@ -97,8 +97,14 @@ echo "  green_url=$GREEN_URL"
 echo "  active_url=$ACTIVE_URL"
 echo "  blue_id=${BLUE_REVISION:-}"
 
-# Output values for workflow to capture
-echo "::set-output name=green_url::$GREEN_URL"
-echo "::set-output name=green_id::$GREEN_ID"
-echo "::set-output name=blue_id::${BLUE_REVISION:-}"
-echo "::set-output name=active_url::$ACTIVE_URL"
+# Write outputs to file for artifact upload
+OUTPUTS_FILE="deploy-outputs.env"
+cat > "$OUTPUTS_FILE" <<EOF
+GREEN_URL=$GREEN_URL
+GREEN_ID=$GREEN_ID
+BLUE_ID=${BLUE_REVISION:-}
+ACTIVE_URL=$ACTIVE_URL
+EOF
+
+echo "Outputs written to $OUTPUTS_FILE"
+cat "$OUTPUTS_FILE"

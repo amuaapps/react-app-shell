@@ -271,6 +271,13 @@ jobs:
           REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
           PROJECT_NAME: react-app-shell
 
+      - name: Upload deployment outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-outputs
+          path: deploy-outputs.env
+          retention-days: 1
+
   # ============================================================================
   # Stage 4: Verify GREEN + Switch Traffic (Azure)
   # ============================================================================
@@ -304,7 +311,7 @@ jobs:
 
       - name: Health check GREEN revision
         run: |
-          GREEN_URL="${{ needs.deploy_azure.outputs.green_url }}"
+          GREEN_URL="$GREEN_URL"
           echo "Health checking GREEN: $GREEN_URL"
           
           MAX_ATTEMPTS=10
@@ -330,7 +337,7 @@ jobs:
 
       - name: Smoke test GREEN revision
         run: |
-          GREEN_URL="${{ needs.deploy_azure.outputs.green_url }}"
+          GREEN_URL="$GREEN_URL"
           echo "Running smoke tests against GREEN: $GREEN_URL"
           
           RESPONSE=$(curl -f -s -m 10 "$GREEN_URL")
@@ -359,8 +366,8 @@ jobs:
         env:
           AZURE_RESOURCE_GROUP_NAME: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
-          GREEN_ID: ${{ needs.deploy_azure.outputs.green_id }}
-          BLUE_ID: ${{ needs.deploy_azure.outputs.blue_id }}
+          GREEN_ID: ${{ env.GREEN_ID }}
+          BLUE_ID: ${{ env.BLUE_ID }}
 
       - name: Rollback on failure
         if: failure()
@@ -379,5 +386,5 @@ jobs:
         env:
           AZURE_RESOURCE_GROUP_NAME: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
-          BLUE_ID: ${{ needs.deploy_azure.outputs.blue_id }}
-          GREEN_ID: ${{ needs.deploy_azure.outputs.green_id }}
+          BLUE_ID: ${{ env.BLUE_ID }}
+          GREEN_ID: ${{ env.GREEN_ID }}
