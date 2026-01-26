@@ -6,6 +6,8 @@ const config: Config = {
   roots: ['<rootDir>/tests', '<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.ts?(x)', '**/?(*.)+(spec|test).ts?(x)'],
   moduleNameMapper: {
+    // Mock env-provider for Jest to avoid import.meta parsing issues
+    '^@/lib/env-provider$': '<rootDir>/tests/__mocks__/lib/env-provider.ts',
     // Note: @/config/remotes is no longer mocked - it uses env-provider abstraction
     '^@amuaapps/ui-library$': '<rootDir>/tests/__mocks__/@amuaapps/ui-library.tsx',
     '^@/components/(.*)$': '<rootDir>/src/components/$1',

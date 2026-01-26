@@ -19,18 +19,6 @@ export interface EnvProvider {
 }
 
 /**
- * Vite environment provider
- * Uses import.meta.env which is available in Vite runtime
- */
-class ViteEnvProvider implements EnvProvider {
-  get(key: string): string | undefined {
-    const viteKey = `VITE_${key}`;
-    const value = import.meta.env[viteKey] as unknown;
-    return typeof value === 'string' ? value : undefined;
-  }
-}
-
-/**
  * Process environment provider
  * Uses process.env which is available in Node.js (Jest)
  */
@@ -54,21 +42,34 @@ export class StaticEnvProvider implements EnvProvider {
 }
 
 /**
+ * Create Vite environment provider dynamically
+ * This function is only called in Vite runtime, avoiding Jest parse errors
+ */
+function createViteEnvProvider(): EnvProvider {
+  return {
+    get(key: string): string | undefined {
+      const viteKey = `VITE_${key}`;
+      // This code only runs in Vite, so import.meta.env is safe
+      const value = (import.meta as { env?: Record<string, unknown> }).env?.[viteKey];
+      return typeof value === 'string' ? value : undefined;
+    },
+  };
+}
+
+/**
  * Global environment provider instance
  * Automatically selects the appropriate provider based on runtime
  */
 let envProvider: EnvProvider;
 
 // Auto-detect runtime and set appropriate provider
-if (typeof import.meta !== 'undefined' && import.meta.env) {
-  // Vite runtime
-  envProvider = new ViteEnvProvider();
-} else if (typeof process !== 'undefined' && process.env) {
+// Check for Node.js/Jest first to avoid import.meta parsing issues
+if (typeof process !== 'undefined' && process.env) {
   // Node.js / Jest
   envProvider = new ProcessEnvProvider();
 } else {
-  // Fallback: empty provider
-  envProvider = new StaticEnvProvider({});
+  // Vite runtime - create provider dynamically
+  envProvider = createViteEnvProvider();
 }
 
 /**
