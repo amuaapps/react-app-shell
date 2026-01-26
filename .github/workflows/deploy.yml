@@ -292,6 +292,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download deployment outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy-outputs
+
+      - name: Load deployment outputs
+        run: |
+          echo "Loading deployment outputs from artifact..."
+          cat deploy-outputs.env
+          source deploy-outputs.env
+          echo "GREEN_URL=$GREEN_URL" >> $GITHUB_ENV
+          echo "GREEN_ID=$GREEN_ID" >> $GITHUB_ENV
+          echo "BLUE_ID=$BLUE_ID" >> $GITHUB_ENV
+          echo "ACTIVE_URL=$ACTIVE_URL" >> $GITHUB_ENV
+          echo "Outputs loaded into environment variables"
+
       - name: Azure Login via OIDC
         uses: azure/login@v2
         with:
