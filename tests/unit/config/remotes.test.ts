@@ -1,18 +1,64 @@
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import {
   getRemoteConfig,
   getRemoteUrl,
   isValidRemoteUrl,
 } from '@/config/remotes';
+import { setEnvProvider, StaticEnvProvider, getEnvProvider } from '@/lib/env-provider';
 
 describe('Remote Configuration', () => {
+  let originalProvider: ReturnType<typeof getEnvProvider>;
+
+  beforeEach(() => {
+    // Save original provider
+    originalProvider = getEnvProvider();
+  });
+
+  afterEach(() => {
+    // Restore original provider
+    setEnvProvider(originalProvider);
+  });
+
   describe('getRemoteConfig', () => {
-    it('returns configuration object with both remote URLs', () => {
+    it('should return default configuration when no env vars set', () => {
+      // Use empty provider to test defaults
+      setEnvProvider(new StaticEnvProvider({}));
+
       const config = getRemoteConfig();
 
       expect(config).toHaveProperty('coreRemoteEntryUrl');
       expect(config).toHaveProperty('campaignsRemoteEntryUrl');
-      expect(typeof config.coreRemoteEntryUrl).toBe('string');
-      expect(typeof config.campaignsRemoteEntryUrl).toBe('string');
+      expect(config.coreRemoteEntryUrl).toContain('localhost:3002');
+      expect(config.campaignsRemoteEntryUrl).toContain('localhost:3003');
+    });
+
+    it('should use environment variables when set', () => {
+      // Inject custom env values
+      setEnvProvider(
+        new StaticEnvProvider({
+          CORE_REMOTE_ENTRY_URL: 'https://core.example.com/entry.js',
+          CAMPAIGNS_REMOTE_ENTRY_URL: 'https://campaigns.example.com/entry.js',
+        })
+      );
+
+      const config = getRemoteConfig();
+
+      expect(config.coreRemoteEntryUrl).toBe('https://core.example.com/entry.js');
+      expect(config.campaignsRemoteEntryUrl).toBe('https://campaigns.example.com/entry.js');
+    });
+
+    it('should fall back to defaults for missing env vars', () => {
+      // Only set one env var
+      setEnvProvider(
+        new StaticEnvProvider({
+          CORE_REMOTE_ENTRY_URL: 'https://core.example.com/entry.js',
+        })
+      );
+
+      const config = getRemoteConfig();
+
+      expect(config.coreRemoteEntryUrl).toBe('https://core.example.com/entry.js');
+      expect(config.campaignsRemoteEntryUrl).toContain('localhost:3003');
     });
 
     it('returns valid URLs', () => {

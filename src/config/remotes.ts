@@ -8,12 +8,15 @@
  * - Environment variables are prefixed with VITE_ to be exposed to the client
  * - Safe defaults for local development
  * - Per-environment configuration without code changes
+ * - Testable without Jest module mocking via env provider abstraction
  *
  * Usage:
  * 1. Set environment variables in .env files (.env.development, .env.staging, .env.production)
  * 2. Or set them in CI/CD pipeline for each environment
  * 3. Access via getRemoteConfig() function
  */
+
+import { getEnv } from '@/lib/env-provider';
 
 export interface RemoteConfig {
   coreRemoteEntryUrl: string;
@@ -36,7 +39,7 @@ const DEFAULT_CONFIG: RemoteConfig = {
  * Get remote application configuration
  *
  * Reads from environment variables with fallback to safe defaults.
- * Environment variables are injected at build time by Vite.
+ * Environment variables are injected at build time by Vite or set in Jest via process.env.
  *
  * Environment Variables:
  * - VITE_CORE_REMOTE_ENTRY_URL: URL for core remote app entry point
@@ -47,12 +50,10 @@ const DEFAULT_CONFIG: RemoteConfig = {
 export function getRemoteConfig(): RemoteConfig {
   return {
     coreRemoteEntryUrl:
-      (import.meta.env.VITE_CORE_REMOTE_ENTRY_URL as string | undefined) ||
-      DEFAULT_CONFIG.coreRemoteEntryUrl,
+      getEnv('CORE_REMOTE_ENTRY_URL') || DEFAULT_CONFIG.coreRemoteEntryUrl,
 
     campaignsRemoteEntryUrl:
-      (import.meta.env.VITE_CAMPAIGNS_REMOTE_ENTRY_URL as string | undefined) ||
-      DEFAULT_CONFIG.campaignsRemoteEntryUrl,
+      getEnv('CAMPAIGNS_REMOTE_ENTRY_URL') || DEFAULT_CONFIG.campaignsRemoteEntryUrl,
   };
 }
 
