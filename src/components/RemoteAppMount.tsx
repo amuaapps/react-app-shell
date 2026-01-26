@@ -80,11 +80,31 @@ export default function RemoteAppMount({
     void mountRemote();
 
     return () => {
-      if (mountedRef.current && unmountFnRef.current) {
-        void unmountFnRef.current();
+      // Always cleanup, regardless of whether remote implements unmount
+      const cleanup = async () => {
+        // Call remote's unmount if available
+        if (unmountFnRef.current) {
+          try {
+            await unmountFnRef.current();
+          } catch (error) {
+            reportError(`Error during unmount of remote app "${name}"`, error, {
+              remoteName: name,
+              basePath,
+            });
+          }
+        }
+
+        // Always clear container DOM to prevent stale content
+        if (container) {
+          container.innerHTML = '';
+        }
+
+        // Always reset state to allow remounting
         mountedRef.current = false;
         unmountFnRef.current = null;
-      }
+      };
+
+      void cleanup();
     };
   }, [remoteApp, basePath, name, location.pathname, navigate]);
 
