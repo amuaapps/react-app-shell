@@ -73,8 +73,23 @@ az deployment group create \
 
 # Query outputs
 GREEN_ID="$(az containerapp show --name "$AZURE_CONTAINER_APP_NAME" --resource-group "$AZURE_RESOURCE_GROUP_NAME" --query properties.latestRevisionName -o tsv)"
-GREEN_URL="https://$(az containerapp show --name "$AZURE_CONTAINER_APP_NAME" --resource-group "$AZURE_RESOURCE_GROUP_NAME" --query properties.latestRevisionFqdn -o tsv)"
 ACTIVE_URL="https://$(az containerapp show --name "$AZURE_CONTAINER_APP_NAME" --resource-group "$AZURE_RESOURCE_GROUP_NAME" --query properties.configuration.ingress.fqdn -o tsv)"
+
+# Get GREEN URL using the label-based FQDN
+# Format: https://<app-name>---<label>.<region>.azurecontainerapps.io
+GREEN_FQDN="$(az containerapp revision show \
+  --name "$GREEN_ID" \
+  --app "$AZURE_CONTAINER_APP_NAME" \
+  --resource-group "$AZURE_RESOURCE_GROUP_NAME" \
+  --query properties.fqdn -o tsv 2>/dev/null || echo "")"
+
+if [ -z "$GREEN_FQDN" ]; then
+  # Fallback: construct URL from label if revision FQDN not available
+  BASE_FQDN="${ACTIVE_URL#https://}"
+  GREEN_URL="https://${AZURE_CONTAINER_APP_NAME}---${CANDIDATE_LABEL}.${BASE_FQDN#*.}"
+else
+  GREEN_URL="https://${GREEN_FQDN}"
+fi
 
 echo "Deployed GREEN revision:"
 echo "  green_id=$GREEN_ID"
