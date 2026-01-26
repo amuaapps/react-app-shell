@@ -260,11 +260,6 @@ jobs:
         run: |
           chmod +x scripts/ci/deploy-azure-green.sh
           ./scripts/ci/deploy-azure-green.sh
-          
-          # Verify outputs were written
-          echo "Verifying step outputs are set:"
-          echo "green_url output: $(grep '^green_url=' $GITHUB_OUTPUT | cut -d= -f2-)"
-          echo "green_id output: $(grep '^green_id=' $GITHUB_OUTPUT | cut -d= -f2-)"
         env:
           ENVIRONMENT: ${{ needs.context.outputs.environment }}
           IMAGE_REF: ${{ needs.build.outputs.image_ref }}

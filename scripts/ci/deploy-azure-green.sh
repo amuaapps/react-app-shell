@@ -97,13 +97,8 @@ echo "  green_url=$GREEN_URL"
 echo "  active_url=$ACTIVE_URL"
 echo "  blue_id=${BLUE_REVISION:-}"
 
-# Required outputs for CI pipeline (write to $GITHUB_OUTPUT)
-echo "Writing outputs to GITHUB_OUTPUT..."
-echo "green_url=$GREEN_URL" >> "$GITHUB_OUTPUT"
-echo "green_id=$GREEN_ID" >> "$GITHUB_OUTPUT"
-echo "blue_id=${BLUE_REVISION:-}" >> "$GITHUB_OUTPUT"
-echo "active_url=$ACTIVE_URL" >> "$GITHUB_OUTPUT"
-
-echo "Outputs written successfully."
-echo "DEBUG: GITHUB_OUTPUT file contents:"
-tail -4 "$GITHUB_OUTPUT"
+# Output values for workflow to capture
+echo "::set-output name=green_url::$GREEN_URL"
+echo "::set-output name=green_id::$GREEN_ID"
+echo "::set-output name=blue_id::${BLUE_REVISION:-}"
+echo "::set-output name=active_url::$ACTIVE_URL"
