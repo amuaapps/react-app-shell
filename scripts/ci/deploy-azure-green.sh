@@ -2,6 +2,11 @@
 set -euo pipefail
 
 # Azure Container Apps - Deploy GREEN revision with 0% traffic
+#
+# CRITICAL: REGISTRY_PASSWORD must be a long-lived GitHub Personal Access Token
+# with 'read:packages' scope (e.g., NPM_PACKAGE_TOKEN), NOT the ephemeral
+# GITHUB_TOKEN. The Container App stores these credentials and uses them to
+# pull images when activating revisions, which happens after the workflow completes.
 # Adapted from infra-templates to use existing GitHub secret names
 
 # Required env vars (set via GitHub Environment vars/secrets)

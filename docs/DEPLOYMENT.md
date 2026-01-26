@@ -94,7 +94,9 @@ Configure these secrets in GitHub repository settings under **Environments** (`d
 | `AZURE_RESOURCE_GROUP_NAME`              | Resource group name                  | `rg-react-shell-dev`                         |
 | `AZURE_CONTAINER_APPS_ENVIRONMENT_NAME`  | Container Apps environment name      | `cae-react-shell-dev`                        |
 | `AZURE_CONTAINER_APP_NAME`               | Container App name                   | `ca-react-shell-dev`                         |
-| `NPM_PACKAGE_TOKEN`                      | GitHub PAT with `read:packages`      | `ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxx`           |
+| `NPM_PACKAGE_TOKEN`                      | **CRITICAL:** GitHub PAT with `read:packages` scope. Used for both npm install during build AND Container App registry credentials. Must be long-lived (not `GITHUB_TOKEN`). | `ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxx`           |
+
+> **⚠️ Important:** `NPM_PACKAGE_TOKEN` must be a Personal Access Token with `read:packages` scope. Do NOT use the ephemeral `GITHUB_TOKEN` as it expires after the workflow completes, causing Container Apps to fail when pulling images during traffic switching.
 
 ### GitHub Variables (repository-level)
 
@@ -250,6 +252,45 @@ If you need to manually rollback after a successful deployment:
 ---
 
 ## Troubleshooting
+
+### Common Issues
+
+#### 1. Image Pull Authentication Errors During Traffic Switch
+
+**Symptom:**
+```
+ERROR: Failed to provision revision for container app. 
+Error details: Field 'template.containers.app.image' is invalid with details: 
+'Invalid value: "ghcr.io/...": GET https:... DENIED: denied'
+```
+
+**Cause:** Container App is using expired `GITHUB_TOKEN` instead of long-lived `NPM_PACKAGE_TOKEN`.
+
+**Solution:**
+1. Verify `NPM_PACKAGE_TOKEN` secret exists in GitHub repository settings
+2. Ensure it has `read:packages` scope
+3. Confirm workflow uses `NPM_PACKAGE_TOKEN` for `REGISTRY_PASSWORD` (not `GITHUB_TOKEN`)
+
+#### 2. Empty GREEN_URL in Verify Step
+
+**Symptom:** Health check fails with `GREEN_URL=""` or empty URL.
+
+**Cause:** Job outputs not properly passed between `deploy_azure` and `verify_switch_azure` jobs.
+
+**Solution:** Deployment outputs are now passed via artifacts (`deploy-outputs.env` file) which is more reliable than GitHub Actions job outputs.
+
+#### 3. Traffic Label Conflicts
+
+**Symptom:**
+```
+ERROR: Traffic label 'green' is not unique
+```
+
+**Cause:** Existing traffic rules already contain the candidate label.
+
+**Solution:** Deploy script now filters out the candidate label from existing traffic before deployment to avoid conflicts.
+
+## Troubleshooting (Legacy)
 
 ### Deployment Fails at Stage 3
 
