@@ -385,6 +385,16 @@ jobs:
           GREEN_ID: ${{ env.GREEN_ID }}
           BLUE_ID: ${{ env.BLUE_ID }}
 
+      - name: Deployment successful
+        run: |
+          echo "🎉 Deployment completed successfully!"
+          echo ""
+          echo "GREEN revision is now live:"
+          echo "  URL: $ACTIVE_URL"
+          echo "  Revision: $GREEN_ID"
+          echo ""
+          echo "Access your application at: $ACTIVE_URL"
+
       - name: Rollback on failure
         if: failure()
         run: |
