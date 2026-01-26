@@ -34,18 +34,20 @@ param imageReference string
 @description('Revision suffix for this deployment (e.g., timestamp or build number)')
 param revisionSuffix string
 
-@description('Traffic weight for this revision (0-100)')
-@minValue(0)
-@maxValue(100)
-param trafficWeight int = 100
-
-@description('Revision label (blue or green)')
+@description('Candidate label (blue or green) for the new revision')
 @allowed([
   'blue'
   'green'
-  'active'
 ])
-param revisionLabel string = 'active'
+param candidateLabel string = 'green'
+
+@description('Initial traffic weight for the candidate revision (0 recommended for blue/green)')
+@minValue(0)
+@maxValue(100)
+param candidateWeight int = 0
+
+@description('Existing traffic rules to preserve live traffic safely (array of objects)')
+param existingTraffic array = []
 
 @description('Azure region for resources')
 param location string = resourceGroup().location
@@ -53,8 +55,11 @@ param location string = resourceGroup().location
 @description('Environment name (dev, staging, prod)')
 param environment string
 
-@description('Whether this is the first deployment (no existing revisions)')
-param isFirstDeployment bool = true
+@description('Project name (used for resource naming and tagging)')
+param projectName string = 'react-app-shell'
+
+@description('Container registry server (e.g., ghcr.io)')
+param registryServer string = 'ghcr.io'
 
 @description('Container registry username (GitHub username)')
 param registryUsername string
@@ -63,10 +68,31 @@ param registryUsername string
 @secure()
 param registryPassword string
 
+@description('Expose ingress publicly')
+param externalIngress bool = true
+
+@description('Container port exposed via ingress')
+param targetPort int = 80
+
+@description('CPU cores')
+param cpu float = 0.25
+
+@description('Memory (e.g., 0.5Gi, 1Gi)')
+param memory string = '0.5Gi'
+
+@description('Minimum replicas')
+@minValue(0)
+param minReplicas int = 1
+
+@description('Maximum replicas')
+@minValue(1)
+param maxReplicas int = 3
+
 @description('Tags to apply to all resources')
 param tags object = {
-  project: 'react-app-shell'
+  project: projectName
   managedBy: 'bicep'
+  environment: environment
 }
 
 // ============================================================================
@@ -90,12 +116,19 @@ module containerApp 'modules/container-app.bicep' = {
     environmentId: containerAppsEnvironment.outputs.environmentId
     imageReference: imageReference
     revisionSuffix: revisionSuffix
-    trafficWeight: trafficWeight
-    revisionLabel: revisionLabel
-    isFirstDeployment: isFirstDeployment
+    candidateLabel: candidateLabel
+    candidateWeight: candidateWeight
+    existingTraffic: existingTraffic
     environment: environment
+    registryServer: registryServer
     registryUsername: registryUsername
     registryPassword: registryPassword
+    externalIngress: externalIngress
+    targetPort: targetPort
+    cpu: cpu
+    memory: memory
+    minReplicas: minReplicas
+    maxReplicas: maxReplicas
     tags: tags
   }
 }

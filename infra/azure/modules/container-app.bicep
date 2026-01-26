@@ -20,19 +20,22 @@ param imageReference string
 @description('Revision suffix for this deployment')
 param revisionSuffix string
 
-@description('Traffic weight for the new revision (0-100)')
+@description('Candidate label (blue or green) for the new revision')
+param candidateLabel string
+
+@description('Initial traffic weight for the candidate revision (0-100)')
 @minValue(0)
 @maxValue(100)
-param trafficWeight int
+param candidateWeight int
 
-@description('Label for the revision (blue or green)')
-param revisionLabel string
-
-@description('Whether this is the first deployment (no existing revisions)')
-param isFirstDeployment bool
+@description('Existing traffic rules to preserve live traffic safely')
+param existingTraffic array = []
 
 @description('Environment name (dev, staging, prod)')
 param environment string
+
+@description('Container registry server (e.g., ghcr.io)')
+param registryServer string = 'ghcr.io'
 
 @description('Container registry username')
 param registryUsername string
@@ -41,8 +44,40 @@ param registryUsername string
 @secure()
 param registryPassword string
 
+@description('Expose ingress publicly')
+param externalIngress bool = true
+
+@description('Container port')
+param targetPort int = 80
+
+@description('CPU cores')
+param cpu float = 0.25
+
+@description('Memory (e.g., 0.5Gi, 1Gi)')
+param memory string = '0.5Gi'
+
+@description('Minimum replicas')
+@minValue(0)
+param minReplicas int = 1
+
+@description('Maximum replicas')
+@minValue(1)
+param maxReplicas int = 3
+
 @description('Tags to apply to resources')
 param tags object = {}
+
+// Build traffic rules: preserve existing + add new candidate
+var trafficRules = concat(
+  existingTraffic,
+  [
+    {
+      latestRevision: true
+      weight: candidateWeight
+      label: candidateLabel
+    }
+  ]
+)
 
 resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: containerAppName
@@ -53,22 +88,17 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
   properties: {
     managedEnvironmentId: environmentId
     configuration: {
+      activeRevisionsMode: 'Multiple'
       ingress: {
-        external: true
-        targetPort: 80
+        external: externalIngress
+        targetPort: targetPort
         transport: 'auto'
         allowInsecure: false
-        traffic: [
-          {
-            revisionName: '${containerAppName}--${revisionSuffix}'
-            weight: isFirstDeployment ? 100 : trafficWeight
-            label: revisionLabel
-          }
-        ]
+        traffic: trafficRules
       }
       registries: [
         {
-          server: split(imageReference, '/')[0]
+          server: registryServer
           username: registryUsername
           passwordSecretRef: 'registry-password'
         }
@@ -84,27 +114,24 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
       revisionSuffix: revisionSuffix
       containers: [
         {
-          name: 'shell'
+          name: 'app'
           image: imageReference
           resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
+            cpu: cpu
+            memory: memory
           }
+          env: [
+            {
+              name: 'AMUA_ENV'
+              value: environment
+            }
+          ]
         }
       ]
       scale: {
-        minReplicas: 1
-        maxReplicas: 3
-        rules: [
-          {
-            name: 'http-scaling'
-            http: {
-              metadata: {
-                concurrentRequests: '50'
-              }
-            }
-          }
-        ]
+        minReplicas: minReplicas
+        maxReplicas: maxReplicas
+        rules: []
       }
     }
   }

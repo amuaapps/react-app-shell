@@ -1,45 +1,29 @@
-name: CI/CD Pipeline
+name: Deploy Pipeline
 
 on:
   push:
-    branches: [develop, staging, main]
-  pull_request:
-    branches: [develop, staging, main]
+    branches: [develop, release, main]
   workflow_dispatch:
     inputs:
       environment:
         description: 'Deployment environment'
-        required: true
+        required: false
         type: choice
         options:
+          - auto
           - dev
           - staging
           - prod
-        default: dev
-      deploy_enabled:
-        description: 'Deploy to Azure'
-        required: true
-        type: boolean
-        default: false
-      revision_label:
-        description: 'Revision label (blue/green)'
+        default: auto
+      cloud:
+        description: 'Cloud provider'
         required: false
         type: choice
         options:
-          - blue
-          - green
-          - active
-        default: blue
-      initial_traffic_weight:
-        description: 'Initial traffic weight for new revision (0-100)'
-        required: false
-        type: number
-        default: 0
-      enable_traffic_switch:
-        description: 'Switch 100% traffic to new revision after verification'
-        required: false
-        type: boolean
-        default: false
+          - auto
+          - azure
+          - aws
+        default: auto
 
 permissions:
   id-token: write
@@ -52,11 +36,108 @@ env:
 
 jobs:
   # ============================================================================
+  # Stage 0: Context Resolution
+  # ============================================================================
+  context:
+    name: Resolve Context
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.resolve.outputs.environment }}
+      cloud_input: ${{ steps.resolve.outputs.cloud_input }}
+    
+    steps:
+      - name: Resolve environment from branch
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.environment }}" != "auto" ]; then
+            ENV="${{ inputs.environment }}"
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            ENV="prod"
+          elif [ "${{ github.ref }}" == "refs/heads/release" ]; then
+            ENV="staging"
+          else
+            ENV="dev"
+          fi
+          
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+          echo "Resolved environment: $ENV"
+          
+          CLOUD_INPUT="${{ inputs.cloud || 'auto' }}"
+          echo "cloud_input=$CLOUD_INPUT" >> $GITHUB_OUTPUT
+          echo "Cloud input: $CLOUD_INPUT"
+
+  # ============================================================================
+  # Stage 0: Cloud Selection
+  # ============================================================================
+  decide:
+    name: Decide Cloud Provider
+    runs-on: ubuntu-latest
+    needs: context
+    outputs:
+      cloud: ${{ steps.decide.outputs.cloud }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Determine cloud provider
+        id: decide
+        run: |
+          CLOUD_INPUT="${{ needs.context.outputs.cloud_input }}"
+          
+          # Check if AWS is requested
+          if [ "$CLOUD_INPUT" == "aws" ]; then
+            echo "::error::AWS deployment is not implemented for this repo yet. Use cloud=azure or cloud=auto."
+            exit 1
+          fi
+          
+          # Check what infrastructure exists
+          HAS_AZURE=false
+          HAS_AWS=false
+          
+          if [ -d "infra/azure" ] && [ -f "infra/azure/main.bicep" ]; then
+            HAS_AZURE=true
+          fi
+          
+          if [ -d "infra/aws" ] && [ -f "infra/aws/main.tf" ]; then
+            HAS_AWS=true
+          fi
+          
+          # Determine cloud
+          if [ "$CLOUD_INPUT" == "azure" ]; then
+            if [ "$HAS_AZURE" != "true" ]; then
+              echo "::error::Azure infrastructure not found in infra/azure/"
+              exit 1
+            fi
+            CLOUD="azure"
+          elif [ "$CLOUD_INPUT" == "auto" ]; then
+            if [ "$HAS_AZURE" == "true" ] && [ "$HAS_AWS" == "true" ]; then
+              echo "::error::Both Azure and AWS infrastructure found. Please specify cloud=azure or cloud=aws explicitly."
+              exit 1
+            elif [ "$HAS_AZURE" == "true" ]; then
+              CLOUD="azure"
+            elif [ "$HAS_AWS" == "true" ]; then
+              echo "::error::AWS deployment is not implemented for this repo yet."
+              exit 1
+            else
+              echo "::error::No infrastructure found in infra/azure/ or infra/aws/"
+              exit 1
+            fi
+          else
+            echo "::error::Invalid cloud input: $CLOUD_INPUT"
+            exit 1
+          fi
+          
+          echo "cloud=$CLOUD" >> $GITHUB_OUTPUT
+          echo "Selected cloud: $CLOUD"
+
+  # ============================================================================
   # Stage 1: Test
   # ============================================================================
   test:
     name: Test & Quality Checks
     runs-on: ubuntu-latest
+    needs: decide
     
     steps:
       - name: Checkout code
@@ -68,14 +149,6 @@ jobs:
           node-version-file: .nvmrc
           cache: 'npm'
           cache-dependency-path: package-lock.json
-
-      - name: Print environment diagnostics
-        run: |
-          echo "Node version: $(node -v)"
-          echo "npm version: $(npm -v)"
-          echo "npm config:"
-          npm config list
-          echo "Lockfile exists: $(test -f package-lock.json && echo 'yes' || echo 'no')"
 
       - name: Install dependencies
         run: npm ci
@@ -100,50 +173,19 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-          retention-days: 1
-
   # ============================================================================
-  # Stage 2: Build & Push Container Image
+  # Stage 2: Build Container Image
   # ============================================================================
   build:
     name: Build & Push Container Image
     runs-on: ubuntu-latest
-    needs: test
-    if: |
-      (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main')) ||
-      (github.event_name == 'workflow_dispatch' && inputs.deploy_enabled == true)
+    needs: [context, test]
     outputs:
-      image_tag: ${{ steps.image_ref.outputs.tag }}
-      image_digest: ${{ steps.build.outputs.digest }}
-      environment: ${{ steps.env.outputs.environment }}
+      image_ref: ${{ steps.image_ref.outputs.ref }}
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Determine environment
-        id: env
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
-          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "environment=prod" >> $GITHUB_OUTPUT
-          elif [ "${{ github.ref }}" == "refs/heads/staging" ]; then
-            echo "environment=staging" >> $GITHUB_OUTPUT
-          else
-            echo "environment=dev" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Print build diagnostics
-        run: |
-          echo "Node version: $(node -v)"
-          echo "npm version: $(npm -v)"
-          echo "Environment: ${{ steps.env.outputs.environment }}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -161,9 +203,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,prefix=${{ steps.env.outputs.environment }}-,format=short
-            type=raw,value=${{ steps.env.outputs.environment }}-latest
-            type=raw,value=${{ steps.env.outputs.environment }}-${{ github.run_number }}
+            type=sha,prefix=${{ needs.context.outputs.environment }}-,format=short
+            type=raw,value=${{ needs.context.outputs.environment }}-latest
 
       - name: Build and push Docker image
         id: build
@@ -181,361 +222,162 @@ jobs:
       - name: Extract single image reference
         id: image_ref
         run: |
-          # Get the first tag (SHA-based) as the primary image reference
-          IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
-          echo "tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "Using image: $IMAGE_TAG"
+          IMAGE_REF=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
+          echo "ref=$IMAGE_REF" >> $GITHUB_OUTPUT
+          echo "Image reference: $IMAGE_REF"
 
   # ============================================================================
-  # Stage 3: Deploy to Azure
+  # Stage 3: Deploy to GREEN (Azure)
   # ============================================================================
-  deploy:
-    name: Deploy to Azure
+  deploy_azure:
+    name: Deploy to Azure (GREEN)
     runs-on: ubuntu-latest
-    needs: build
-    environment: ${{ needs.build.outputs.environment }}
+    needs: [context, decide, build]
+    if: needs.decide.outputs.cloud == 'azure'
+    environment: ${{ needs.context.outputs.environment }}
+    concurrency:
+      group: deploy-react-${{ needs.context.outputs.environment }}
+      cancel-in-progress: false
+    outputs:
+      green_url: ${{ steps.deploy.outputs.green_url }}
+      green_id: ${{ steps.deploy.outputs.green_id }}
+      blue_id: ${{ steps.deploy.outputs.blue_id }}
+      active_url: ${{ steps.deploy.outputs.active_url }}
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Azure Login via OIDC
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Determine revision label
-        id: revision_label
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "label=${{ inputs.revision_label }}" >> $GITHUB_OUTPUT
-          else
-            # Auto-determine based on current active revision
-            CURRENT_LABEL=$(az containerapp revision list \
-              --name ${{ secrets.AZURE_CONTAINER_APP_NAME }} \
-              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_NAME }} \
-              --query "[?properties.trafficWeight>0].properties.template.revisionSuffix | [0]" \
-              --output tsv 2>/dev/null || echo "")
-            
-            if [[ "$CURRENT_LABEL" == *"blue"* ]]; then
-              echo "label=green" >> $GITHUB_OUTPUT
-            else
-              echo "label=blue" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-      - name: Generate revision suffix
-        id: revision
-        run: |
-          REVISION_SUFFIX="${{ steps.revision_label.outputs.label }}-$(date +%Y%m%d-%H%M%S)"
-          echo "suffix=$REVISION_SUFFIX" >> $GITHUB_OUTPUT
-
-      - name: Check if Container App exists
-        id: check_app
-        run: |
-          APP_EXISTS=$(az containerapp show \
-            --name ${{ secrets.AZURE_CONTAINER_APP_NAME }} \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_NAME }} \
-            --query "name" -o tsv 2>/dev/null || echo "")
-          
-          if [ -z "$APP_EXISTS" ]; then
-            echo "Container App does not exist - this is the first deployment"
-            echo "exists=false" >> $GITHUB_OUTPUT
-          else
-            echo "Container App exists - this is a subsequent deployment"
-            echo "exists=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Determine traffic weight
-        id: traffic
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "weight=${{ inputs.initial_traffic_weight }}" >> $GITHUB_OUTPUT
-          elif [ "${{ steps.check_app.outputs.exists }}" == "false" ]; then
-            # First deployment - use 100% traffic
-            echo "First deployment detected - using 100% traffic"
-            echo "weight=100" >> $GITHUB_OUTPUT
-          else
-            # Subsequent deployment - use 0% traffic for blue/green testing
-            echo "Subsequent deployment - using 0% traffic for blue/green"
-            echo "weight=0" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Debug environment variables
-        run: |
-          echo "Environment: ${{ needs.build.outputs.environment }}"
-          echo "AZURE_RESOURCE_GROUP_NAME: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}"
-          echo "AZURE_CONTAINER_APPS_ENVIRONMENT_NAME: ${{ secrets.AZURE_CONTAINER_APPS_ENVIRONMENT_NAME }}"
-          echo "AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}"
-          echo "AZURE_REGION: ${{ vars.AZURE_REGION }}"
-          echo "Image reference: ${{ needs.build.outputs.image_tag }}"
-          echo "Revision suffix: ${{ steps.revision.outputs.suffix }}"
-
-      - name: Deploy Bicep template
+      - name: Deploy GREEN revision
         id: deploy
-        uses: azure/arm-deploy@v1
-        with:
-          scope: resourcegroup
-          resourceGroupName: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
-          template: ./infra/azure/main.bicep
-          parameters: >
-            environmentName=${{ secrets.AZURE_CONTAINER_APPS_ENVIRONMENT_NAME }}
-            containerAppName=${{ secrets.AZURE_CONTAINER_APP_NAME }}
-            imageReference=${{ needs.build.outputs.image_tag }}
-            revisionSuffix=${{ steps.revision.outputs.suffix }}
-            trafficWeight=${{ steps.traffic.outputs.weight }}
-            revisionLabel=${{ steps.revision_label.outputs.label }}
-            isFirstDeployment=${{ steps.check_app.outputs.exists == 'false' }}
-            registryUsername=${{ github.actor }}
-            registryPassword=${{ secrets.NPM_PACKAGE_TOKEN }}
-            location=${{ vars.AZURE_REGION }}
-            environment=${{ needs.build.outputs.environment }}
-          failOnStdErr: false
-
-      - name: Capture deployment outputs
-        id: capture
         run: |
-          ACTIVE_URL="${{ steps.deploy.outputs.activeUrl }}"
-          REVISION_URL="${{ steps.deploy.outputs.revisionUrl }}"
-          REVISION_NAME="${{ steps.deploy.outputs.latestRevisionName }}"
-          CONTAINER_APP_NAME="${{ steps.deploy.outputs.containerAppName }}"
-          
-          echo "active_url=${ACTIVE_URL}" >> $GITHUB_OUTPUT
-          echo "revision_url=${REVISION_URL}" >> $GITHUB_OUTPUT
-          echo "revision_name=${REVISION_NAME}" >> $GITHUB_OUTPUT
-          echo "container_app_name=${CONTAINER_APP_NAME}" >> $GITHUB_OUTPUT
-          
-          echo "Captured to GITHUB_OUTPUT:"
-          echo "  active_url=${ACTIVE_URL}"
-          echo "  revision_url=${REVISION_URL}"
-          echo "  revision_name=${REVISION_NAME}"
-          echo "  container_app_name=${CONTAINER_APP_NAME}"
-
-      - name: Debug deployment outputs
-        run: |
-          echo "=== Raw ARM Deployment Outputs ==="
-          echo "All step outputs:"
-          echo "${{ toJSON(steps.deploy.outputs) }}"
-          echo ""
-          echo "=== Individual Outputs ==="
-          echo "activeUrl: '${{ steps.deploy.outputs.activeUrl }}'"
-          echo "revisionUrl: '${{ steps.deploy.outputs.revisionUrl }}'"
-          echo "latestRevisionName: '${{ steps.deploy.outputs.latestRevisionName }}'"
-          echo "containerAppName: '${{ steps.deploy.outputs.containerAppName }}'"
-          echo ""
-          echo "=== Captured Outputs ==="
-          echo "active_url: '${{ steps.capture.outputs.active_url }}'"
-          echo "revision_url: '${{ steps.capture.outputs.revision_url }}'"
-      
-      - name: Output deployment info
-        run: |
-          echo "### 🚀 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ needs.build.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Revision Label:** ${{ steps.revision_label.outputs.label }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Revision Name:** ${{ steps.deploy.outputs.latestRevisionName }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Initial Traffic:** ${{ steps.traffic.outputs.weight }}%" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Active URL:** ${{ steps.deploy.outputs.activeUrl }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Revision URL:** ${{ steps.deploy.outputs.revisionUrl }}" >> $GITHUB_STEP_SUMMARY
-
-      - name: Save deployment outputs to file
-        run: |
-          mkdir -p deployment-outputs
-          echo "${{ steps.deploy.outputs.activeUrl }}" > deployment-outputs/active_url.txt
-          echo "${{ steps.deploy.outputs.revisionUrl }}" > deployment-outputs/revision_url.txt
-          echo "${{ steps.deploy.outputs.latestRevisionName }}" > deployment-outputs/revision_name.txt
-          echo "${{ steps.deploy.outputs.containerAppName }}" > deployment-outputs/container_app_name.txt
-          
-          echo "Saved deployment outputs to files:"
-          cat deployment-outputs/active_url.txt
-          cat deployment-outputs/revision_url.txt
-          cat deployment-outputs/revision_name.txt
-          cat deployment-outputs/container_app_name.txt
-
-      - name: Upload deployment outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: deployment-outputs
-          path: deployment-outputs/
-          retention-days: 1
+          chmod +x scripts/ci/deploy-azure-green.sh
+          scripts/ci/deploy-azure-green.sh
+        env:
+          ENVIRONMENT: ${{ needs.context.outputs.environment }}
+          IMAGE_REF: ${{ needs.build.outputs.image_ref }}
+          AZURE_RESOURCE_GROUP_NAME: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+          AZURE_CONTAINER_APPS_ENVIRONMENT_NAME: ${{ secrets.AZURE_CONTAINER_APPS_ENVIRONMENT_NAME }}
+          AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
+          AZURE_REGION: ${{ vars.AZURE_REGION }}
+          REGISTRY_USERNAME: ${{ github.actor }}
+          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_NAME: react-app-shell
 
   # ============================================================================
-  # Stage 4: Verify Deployment
+  # Stage 4: Verify GREEN + Switch Traffic (Azure)
   # ============================================================================
-  verify:
-    name: Verify Deployment
+  verify_switch_azure:
+    name: Verify & Switch Traffic (Azure)
     runs-on: ubuntu-latest
-    needs: [build, deploy]
+    needs: [context, decide, deploy_azure]
+    if: needs.decide.outputs.cloud == 'azure'
+    environment: ${{ needs.context.outputs.environment }}
     
     steps:
-      - name: Download deployment outputs
-        uses: actions/download-artifact@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login via OIDC
+        uses: azure/login@v2
         with:
-          name: deployment-outputs
-          path: deployment-outputs/
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Load deployment outputs
-        id: load_outputs
+      - name: IaC Security Check
         run: |
-          ACTIVE_URL=$(cat deployment-outputs/active_url.txt)
-          REVISION_URL=$(cat deployment-outputs/revision_url.txt)
-          REVISION_NAME=$(cat deployment-outputs/revision_name.txt)
-          CONTAINER_APP_NAME=$(cat deployment-outputs/container_app_name.txt)
+          echo "Running IaC security checks..."
+          # Install checkov
+          pip install checkov
           
-          echo "Loaded deployment outputs:"
-          echo "  active_url: $ACTIVE_URL"
-          echo "  revision_url: $REVISION_URL"
-          echo "  revision_name: $REVISION_NAME"
-          echo "  container_app_name: $CONTAINER_APP_NAME"
-          
-          echo "revision_url=$REVISION_URL" >> $GITHUB_OUTPUT
+          # Run checkov on Bicep files
+          checkov -d infra/azure --framework bicep --quiet --compact
+        continue-on-error: false
 
-      - name: Wait for deployment to stabilize
+      - name: Health check GREEN revision
         run: |
-          echo "Waiting 30s for deployment to stabilize..."
-          sleep 30
-
-      - name: Health check - Revision URL
-        id: health_check
-        run: |
-          REVISION_URL="${{ steps.load_outputs.outputs.revision_url }}"
-          echo "Testing revision URL: $REVISION_URL"
+          GREEN_URL="${{ needs.deploy_azure.outputs.green_url }}"
+          echo "Health checking GREEN: $GREEN_URL"
           
-          for i in {1..10}; do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$REVISION_URL" || echo "000")
-            echo "Attempt $i/10: HTTP $HTTP_CODE"
+          MAX_ATTEMPTS=10
+          ATTEMPT=0
+          
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS..."
             
-            if [ "$HTTP_CODE" == "200" ]; then
-              echo "✅ Revision is healthy and reachable"
-              echo "healthy=true" >> $GITHUB_OUTPUT
+            if curl -f -s -m 10 "$GREEN_URL" > /dev/null; then
+              echo "✅ GREEN is healthy"
               exit 0
             fi
             
-            if [ $i -lt 10 ]; then
-              echo "Retrying in 10s..."
+            if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+              echo "Waiting 10s before retry..."
               sleep 10
             fi
           done
           
-          echo "❌ Health check failed after 10 attempts"
-          echo "healthy=false" >> $GITHUB_OUTPUT
+          echo "::error::GREEN health check failed after $MAX_ATTEMPTS attempts"
           exit 1
 
-      - name: Basic smoke tests
-        if: steps.health_check.outputs.healthy == 'true'
+      - name: Smoke test GREEN revision
         run: |
-          REVISION_URL="${{ steps.load_outputs.outputs.revision_url }}"
+          GREEN_URL="${{ needs.deploy_azure.outputs.green_url }}"
+          echo "Running smoke tests against GREEN: $GREEN_URL"
           
-          echo "Running smoke tests..."
+          RESPONSE=$(curl -f -s -m 10 "$GREEN_URL")
           
-          # Test main page returns HTML with React root
-          RESPONSE=$(curl -f -s "$REVISION_URL")
           if echo "$RESPONSE" | grep -q "<html"; then
-            echo "✅ Main page returns HTML"
+            echo "✅ HTML content found"
           else
-            echo "❌ Main page failed to return HTML"
+            echo "::error::No HTML content in response"
             exit 1
           fi
           
           if echo "$RESPONSE" | grep -q "root"; then
             echo "✅ React root element found"
           else
-            echo "❌ React root element not found"
+            echo "::error::React root element not found"
             exit 1
           fi
           
-          echo "✅ All smoke tests passed"
+          echo "✅ Smoke tests passed"
 
-      - name: Verification summary
-        run: |
-          echo "### ✅ Verification Complete!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Health Status:** Healthy" >> $GITHUB_STEP_SUMMARY
-          echo "**Smoke Tests:** Passed" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Revision URL:** ${{ needs.deploy.outputs.revision_url }}" >> $GITHUB_STEP_SUMMARY
-
-  # ============================================================================
-  # Stage 5: Traffic Switch (Blue/Green)
-  # ============================================================================
-  traffic_switch:
-    name: Switch Traffic to New Revision
-    runs-on: ubuntu-latest
-    needs: [build, deploy, verify]
-    if: |
-      (github.event_name == 'workflow_dispatch' && inputs.enable_traffic_switch == true) ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
-    environment:
-      name: ${{ needs.build.outputs.environment }}-traffic-switch
-      url: ${{ needs.deploy.outputs.active_url }}
-    
-    steps:
-      - name: Azure Login via OIDC
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Get current traffic distribution
-        id: current_traffic
-        run: |
-          az containerapp ingress traffic show \
-            --name ${{ needs.deploy.outputs.container_app_name }} \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_NAME }} \
-            --output json > current_traffic.json
-          
-          cat current_traffic.json
-          echo "Current traffic distribution retrieved"
-
-      - name: Switch 100% traffic to new revision
+      - name: Switch traffic to GREEN
         id: switch
         run: |
-          REVISION_NAME="${{ needs.deploy.outputs.revision_name }}"
-          
-          echo "Switching 100% traffic to: $REVISION_NAME"
-          
-          az containerapp ingress traffic set \
-            --name ${{ needs.deploy.outputs.container_app_name }} \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_NAME }} \
-            --revision-weight $REVISION_NAME=100
-          
-          echo "✅ Traffic switch complete"
+          chmod +x scripts/ci/switch-azure-bluegreen.sh
+          scripts/ci/switch-azure-bluegreen.sh
+        env:
+          AZURE_RESOURCE_GROUP_NAME: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+          AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
+          GREEN_ID: ${{ needs.deploy_azure.outputs.green_id }}
+          BLUE_ID: ${{ needs.deploy_azure.outputs.blue_id }}
 
-      - name: Verify traffic switch
+      - name: Rollback on failure
+        if: failure()
         run: |
-          echo "Waiting 10s for traffic switch to propagate..."
-          sleep 10
+          echo "::error::Deployment verification failed. Rolling back to BLUE..."
           
-          ACTIVE_URL="${{ needs.deploy.outputs.active_url }}"
+          BLUE_ID="${{ needs.deploy_azure.outputs.blue_id }}"
           
-          for i in {1..5}; do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$ACTIVE_URL" || echo "000")
-            echo "Verification attempt $i/5: HTTP $HTTP_CODE"
-            
-            if [ "$HTTP_CODE" == "200" ]; then
-              echo "✅ Active URL is healthy after traffic switch"
-              exit 0
-            fi
-            
-            if [ $i -lt 5 ]; then
-              sleep 5
-            fi
-          done
+          if [ -z "$BLUE_ID" ]; then
+            echo "::warning::No BLUE revision to rollback to (first deployment)"
+            exit 0
+          fi
           
-          echo "⚠️ Warning: Could not verify active URL health"
-          exit 1
-
-      - name: Traffic switch summary
-        run: |
-          echo "### 🔄 Traffic Switch Complete!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**New Active Revision:** ${{ needs.deploy.outputs.revision_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Traffic Weight:** 100%" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Active URL:** ${{ needs.deploy.outputs.active_url }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🎉 Deployment fully complete and serving production traffic!"
+          chmod +x scripts/ci/rollback-azure-bluegreen.sh
+          scripts/ci/rollback-azure-bluegreen.sh
+        env:
+          AZURE_RESOURCE_GROUP_NAME: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+          AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
+          BLUE_ID: ${{ needs.deploy_azure.outputs.blue_id }}
+          GREEN_ID: ${{ needs.deploy_azure.outputs.green_id }}
