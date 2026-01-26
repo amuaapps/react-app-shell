@@ -259,7 +259,7 @@ jobs:
         id: deploy
         run: |
           chmod +x scripts/ci/deploy-azure-green.sh
-          scripts/ci/deploy-azure-green.sh
+          ./scripts/ci/deploy-azure-green.sh
         env:
           ENVIRONMENT: ${{ needs.context.outputs.environment }}
           IMAGE_REF: ${{ needs.build.outputs.image_ref }}
