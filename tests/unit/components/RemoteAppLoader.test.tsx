@@ -2,15 +2,19 @@
  * RemoteAppLoader Component Tests
  */
 
+// Mock the loader to return stubs immediately for component tests
+// Must be before imports for Jest hoisting
+jest.mock('@/lib/remote-app-contract/loader', () => ({
+  loadRemoteApp: jest.fn(async () => {
+    const { coreAppStub } = await import('@/stubs');
+    return coreAppStub;
+  }),
+}));
+
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import RemoteAppLoader from '@/components/RemoteAppLoader';
 import { coreAppStub } from '@/stubs';
-
-// Mock the loader to return stubs immediately for component tests
-jest.mock('@/lib/remote-app-contract/loader', () => ({
-  loadRemoteApp: jest.fn().mockResolvedValue(coreAppStub),
-}));
 
 describe('RemoteAppLoader', () => {
   const defaultProps = {
