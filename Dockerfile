@@ -26,7 +26,12 @@ RUN rm -f ~/.npmrc
 # Copy source code
 COPY . .
 
-# Build the application
+# Accept build arguments for Vite environment variables
+# These are baked into the build at compile time
+ARG VITE_CORE_REMOTE_ENTRY_URL
+ARG VITE_CAMPAIGNS_REMOTE_ENTRY_URL
+
+# Build the application with environment variables
 RUN npm run build
 
 # Stage 2: Serve with Nginx

@@ -255,6 +255,29 @@ jobs:
             type=sha,prefix=${{ needs.context.outputs.environment }}-,format=short
             type=raw,value=${{ needs.context.outputs.environment }}-latest
 
+      - name: Set environment-specific remote URLs
+        id: remote_urls
+        run: |
+          ENV="${{ needs.context.outputs.environment }}"
+          
+          # Set remote URLs based on environment
+          if [ "$ENV" == "prod" ]; then
+            CORE_URL="https://ca-react-app-core-prod.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
+            CAMPAIGNS_URL="https://ca-react-app-campaigns-prod.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
+          elif [ "$ENV" == "staging" ]; then
+            CORE_URL="https://ca-react-app-core-staging.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
+            CAMPAIGNS_URL="https://ca-react-app-campaigns-staging.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
+          else
+            # dev environment
+            CORE_URL="https://ca-react-app-core-dev.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
+            CAMPAIGNS_URL="https://ca-react-app-campaigns-dev.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
+          fi
+          
+          echo "core_url=$CORE_URL" >> $GITHUB_OUTPUT
+          echo "campaigns_url=$CAMPAIGNS_URL" >> $GITHUB_OUTPUT
+          echo "Core URL: $CORE_URL"
+          echo "Campaigns URL: $CAMPAIGNS_URL"
+
       - name: Build and push Docker image
         id: build
         uses: docker/build-push-action@v5
@@ -267,6 +290,8 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             NPM_PACKAGE_TOKEN=${{ secrets.NPM_PACKAGE_TOKEN }}
+            VITE_CORE_REMOTE_ENTRY_URL=${{ steps.remote_urls.outputs.core_url }}
+            VITE_CAMPAIGNS_REMOTE_ENTRY_URL=${{ steps.remote_urls.outputs.campaigns_url }}
 
       - name: Extract single image reference
         id: image_ref
