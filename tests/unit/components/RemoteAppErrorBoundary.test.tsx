@@ -69,7 +69,9 @@ describe('RemoteAppErrorBoundary', () => {
       </RemoteAppErrorBoundary>
     );
 
-    expect(screen.getByRole('button', { name: /reload page/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /reload page/i })
+    ).toBeInTheDocument();
   });
 
   it('calls window.location.reload when retry button clicked', () => {

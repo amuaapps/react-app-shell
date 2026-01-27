@@ -11,14 +11,20 @@ describe('error-reporter', () => {
     it('should not throw when reporting errors', () => {
       const reporter = new NoOpErrorReporter();
       expect(() => reporter.reportError('test error')).not.toThrow();
-      expect(() => reporter.reportError('test error', new Error('test'))).not.toThrow();
-      expect(() => reporter.reportError('test error', new Error('test'), { key: 'value' })).not.toThrow();
+      expect(() =>
+        reporter.reportError('test error', new Error('test'))
+      ).not.toThrow();
+      expect(() =>
+        reporter.reportError('test error', new Error('test'), { key: 'value' })
+      ).not.toThrow();
     });
 
     it('should not throw when reporting warnings', () => {
       const reporter = new NoOpErrorReporter();
       expect(() => reporter.reportWarning('test warning')).not.toThrow();
-      expect(() => reporter.reportWarning('test warning', { key: 'value' })).not.toThrow();
+      expect(() =>
+        reporter.reportWarning('test warning', { key: 'value' })
+      ).not.toThrow();
     });
   });
 
@@ -43,7 +49,11 @@ describe('error-reporter', () => {
 
       reporter.reportError('test message', error, context);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('test message', error, context);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'test message',
+        error,
+        context
+      );
     });
 
     it('should log warnings to console', () => {
@@ -86,7 +96,11 @@ describe('error-reporter', () => {
       reportError('test error', new Error('test'));
       reportWarning('test warning');
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('test error', new Error('test'), undefined);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'test error',
+        new Error('test'),
+        undefined
+      );
       expect(consoleWarnSpy).toHaveBeenCalledWith('test warning', undefined);
     });
 
