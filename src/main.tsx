@@ -10,6 +10,14 @@ import './styles/theme-core.css';
 
 import App from './App';
 import './styles/index.css';
+import { setErrorReporter, ConsoleErrorReporter } from './lib/error-reporter';
+
+// Configure error reporting for development
+// In dev: logs to console for debugging remote loading failures
+// In prod: remains no-op (no console output)
+if (import.meta.env.DEV) {
+  setErrorReporter(new ConsoleErrorReporter());
+}
 
 const rootElement = document.getElementById('root');
 
