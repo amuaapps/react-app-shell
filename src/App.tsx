@@ -21,7 +21,9 @@
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
 import RemoteAppMount from '@/components/RemoteAppMount';
+import RemoteAppLoader from '@/components/RemoteAppLoader';
 import { coreAppStub, campaignsAppStub } from '@/stubs';
+import { getRemoteUrl } from '@/config/remotes';
 
 /**
  * Route configuration for remote apps
@@ -36,7 +38,9 @@ const REMOTE_ROUTES = {
   },
   core: {
     basePath: '/',
-    remoteApp: coreAppStub,
+    remoteUrl: getRemoteUrl('core'),
+    remoteName: 'remoteApp_core',
+    fallbackStub: coreAppStub,
     name: 'core',
   },
 } as const;
@@ -61,10 +65,12 @@ function App() {
         <Route
           index
           element={
-            <RemoteAppMount
-              remoteApp={REMOTE_ROUTES.core.remoteApp}
-              basePath={REMOTE_ROUTES.core.basePath}
+            <RemoteAppLoader
               name={REMOTE_ROUTES.core.name}
+              remoteUrl={REMOTE_ROUTES.core.remoteUrl}
+              remoteName={REMOTE_ROUTES.core.remoteName}
+              basePath={REMOTE_ROUTES.core.basePath}
+              fallbackStub={REMOTE_ROUTES.core.fallbackStub}
             />
           }
         />
@@ -73,10 +79,12 @@ function App() {
         <Route
           path="*"
           element={
-            <RemoteAppMount
-              remoteApp={REMOTE_ROUTES.core.remoteApp}
-              basePath={REMOTE_ROUTES.core.basePath}
+            <RemoteAppLoader
               name={REMOTE_ROUTES.core.name}
+              remoteUrl={REMOTE_ROUTES.core.remoteUrl}
+              remoteName={REMOTE_ROUTES.core.remoteName}
+              basePath={REMOTE_ROUTES.core.basePath}
+              fallbackStub={REMOTE_ROUTES.core.fallbackStub}
             />
           }
         />
