@@ -40,7 +40,9 @@ describe('RemoteAppLoader', () => {
 
     // Wait for loading to complete and remote app to mount
     await waitFor(() => {
-      const remoteContainer = container.querySelector('[data-remote-app="core"]');
+      const remoteContainer = container.querySelector(
+        '[data-remote-app="core"]'
+      );
       expect(remoteContainer).toBeInTheDocument();
     });
   });
@@ -75,7 +77,9 @@ describe('RemoteAppLoader', () => {
 
     // Should still render the stub
     await waitFor(() => {
-      const remoteContainer = container.querySelector('[data-remote-app="core"]');
+      const remoteContainer = container.querySelector(
+        '[data-remote-app="core"]'
+      );
       expect(remoteContainer).toBeInTheDocument();
     });
   });
@@ -88,7 +92,9 @@ describe('RemoteAppLoader', () => {
     );
 
     await waitFor(() => {
-      const remoteContainer = container.querySelector('[data-remote-app="core"]');
+      const remoteContainer = container.querySelector(
+        '[data-remote-app="core"]'
+      );
       expect(remoteContainer).toBeInTheDocument();
     });
   });
