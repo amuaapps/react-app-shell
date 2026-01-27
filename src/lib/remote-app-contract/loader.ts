@@ -76,7 +76,7 @@ async function loadRemoteAppScript(
         console.error(
           `❌ Remote app "${config.name}" did not expose an instance on window.${globalKey}`,
           'Available window properties:',
-          Object.keys(window).filter(k => k.startsWith('remoteApp'))
+          Object.keys(window).filter((k) => k.startsWith('remoteApp'))
         );
         reject(
           new Error(
