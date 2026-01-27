@@ -26,6 +26,7 @@ const config: Config = {
     '!src/**/*.d.ts',
     '!src/main.tsx',
     '!src/vite-env.d.ts',
+    '!src/stubs/**',
   ],
   coverageThreshold: {
     global: {
