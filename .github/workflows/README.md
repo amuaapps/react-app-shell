@@ -144,6 +144,56 @@ See `.github/workflows/ci.yml` for:
 - CodeQL security scanning
 - Dependency vulnerability checks
 
+### Deploy Outputs Contract
+
+**Version:** 1.0.0
+
+Stage 3 (Deploy GREEN) produces a `deploy-outputs.env` artifact file that Stage 4 (Verify & Switch) consumes. This contract ensures Stage 4 never relies on GitHub Actions job outputs or re-queries Azure for deployment state.
+
+#### Artifact Details
+
+- **Artifact Name:** `deploy-outputs`
+- **File Name:** `deploy-outputs.env`
+- **Format:** Shell environment variables (`KEY=value`)
+- **Retention:** 1 day
+
+#### Required Fields
+
+All deployments **must** include these fields:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `GREEN_URL` | Direct URL to GREEN revision | `https://app---green.eastus.azurecontainerapps.io` |
+| `GREEN_ID` | GREEN revision name | `app--green-20260127-0930` |
+| `BLUE_ID` | BLUE revision name (empty if first deploy) | `app--blue-20260126-1530` |
+| `ACTIVE_URL` | Production URL | `https://app.eastus.azurecontainerapps.io` |
+
+#### Optional Fields
+
+For enhanced observability:
+
+| Field | Description |
+|-------|-------------|
+| `IMAGE_REF` | Container image reference |
+| `COMMIT_SHA` | Git commit SHA |
+| `ENVIRONMENT` | Target environment (dev/staging/prod) |
+| `DEPLOYED_AT` | ISO8601 timestamp |
+
+#### Contract Guarantees
+
+**Stage 3 guarantees:**
+- Always produces the artifact file with all required fields
+- Fails early if required information cannot be determined
+- Never includes secrets in the artifact file
+- Validates outputs before uploading artifact
+
+**Stage 4 guarantees:**
+- Only uses the artifact file (no job outputs or re-discovery)
+- Validates contract before proceeding
+- Fails fast with clear errors if artifact is invalid
+
+See `scripts/ci/DEPLOY_OUTPUTS_CONTRACT.md` for full specification.
+
 ### Blue/Green Deployment Workflow
 
 #### How It Works

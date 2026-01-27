@@ -287,11 +287,7 @@ jobs:
     concurrency:
       group: deploy-react-${{ needs.context.outputs.environment }}
       cancel-in-progress: false
-    outputs:
-      green_url: ${{ steps.deploy.outputs.green_url }}
-      green_id: ${{ steps.deploy.outputs.green_id }}
-      blue_id: ${{ steps.deploy.outputs.blue_id }}
-      active_url: ${{ steps.deploy.outputs.active_url }}
+    # No job outputs - Stage 4 uses artifact only (deploy-outputs.env)
     
     steps:
       - name: Checkout code
@@ -319,6 +315,7 @@ jobs:
           REGISTRY_USERNAME: ${{ github.actor }}
           REGISTRY_PASSWORD: ${{ secrets.NPM_PACKAGE_TOKEN }}
           PROJECT_NAME: react-app-shell
+          GITHUB_SHA: ${{ github.sha }}
 
       - name: Upload deployment outputs
         uses: actions/upload-artifact@v4
@@ -349,8 +346,43 @@ jobs:
       - name: Load deployment outputs
         run: |
           echo "Loading deployment outputs from artifact..."
+          
+          if [ ! -f deploy-outputs.env ]; then
+            echo "::error::deploy-outputs.env not found in artifact"
+            exit 1
+          fi
+          
           cat deploy-outputs.env
           source deploy-outputs.env
+          
+          # Validate contract v1.0.0 - all required fields must be present
+          echo "Validating deploy outputs contract..."
+          MISSING_FIELDS=()
+          
+          if [ -z "${GREEN_URL:-}" ]; then
+            MISSING_FIELDS+=("GREEN_URL")
+          fi
+          
+          if [ -z "${GREEN_ID:-}" ]; then
+            MISSING_FIELDS+=("GREEN_ID")
+          fi
+          
+          # BLUE_ID can be empty for first deployment
+          if [ ! -v BLUE_ID ]; then
+            MISSING_FIELDS+=("BLUE_ID")
+          fi
+          
+          if [ -z "${ACTIVE_URL:-}" ]; then
+            MISSING_FIELDS+=("ACTIVE_URL")
+          fi
+          
+          if [ ${#MISSING_FIELDS[@]} -gt 0 ]; then
+            echo "::error::Deploy outputs contract validation failed"
+            echo "::error::Missing required fields: ${MISSING_FIELDS[*]}"
+            exit 1
+          fi
+          
+          echo "✅ Contract validation passed"
           echo "GREEN_URL=$GREEN_URL" >> $GITHUB_ENV
           echo "GREEN_ID=$GREEN_ID" >> $GITHUB_ENV
           echo "BLUE_ID=$BLUE_ID" >> $GITHUB_ENV

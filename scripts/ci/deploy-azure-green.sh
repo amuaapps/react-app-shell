@@ -106,20 +106,53 @@ else
   GREEN_URL="https://${GREEN_FQDN}"
 fi
 
+# Validate required outputs before writing artifact
+# Fail early if we can't determine critical deployment information
+if [ -z "$GREEN_ID" ]; then
+  echo "::error::Failed to determine GREEN revision ID"
+  exit 1
+fi
+
+if [ -z "$ACTIVE_URL" ]; then
+  echo "::error::Failed to determine active URL"
+  exit 1
+fi
+
+if [ -z "$GREEN_URL" ]; then
+  echo "::error::Failed to determine GREEN URL"
+  exit 1
+fi
+
 echo "Deployed GREEN revision:"
 echo "  green_id=$GREEN_ID"
 echo "  green_url=$GREEN_URL"
 echo "  active_url=$ACTIVE_URL"
-echo "  blue_id=${BLUE_REVISION:-}"
+echo "  blue_id=${BLUE_REVISION:-<none>}"
 
 # Write outputs to file for artifact upload
+# Contract: deploy-outputs.env v1.0.0
+# Required fields: GREEN_URL, GREEN_ID, BLUE_ID, ACTIVE_URL
+# Optional fields: IMAGE_REF, COMMIT_SHA, ENVIRONMENT, DEPLOYED_AT
 OUTPUTS_FILE="deploy-outputs.env"
 cat > "$OUTPUTS_FILE" <<EOF
 GREEN_URL=$GREEN_URL
 GREEN_ID=$GREEN_ID
 BLUE_ID=${BLUE_REVISION:-}
 ACTIVE_URL=$ACTIVE_URL
+IMAGE_REF=${IMAGE_REF:-}
+COMMIT_SHA=${GITHUB_SHA:-}
+ENVIRONMENT=${ENVIRONMENT:-}
+DEPLOYED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 EOF
 
-echo "Outputs written to $OUTPUTS_FILE"
-cat "$OUTPUTS_FILE"
+echo "Outputs written to $OUTPUTS_FILE (contract v1.0.0)"
+echo "Required fields:"
+echo "  GREEN_URL=$GREEN_URL"
+echo "  GREEN_ID=$GREEN_ID"
+echo "  BLUE_ID=${BLUE_REVISION:-<empty>}"
+echo "  ACTIVE_URL=$ACTIVE_URL"
+echo "Optional fields:"
+echo "  IMAGE_REF=${IMAGE_REF:-<not set>}"
+echo "  COMMIT_SHA=${GITHUB_SHA:-<not set>}"
+echo "  ENVIRONMENT=${ENVIRONMENT:-<not set>}"
+echo "  DEPLOYED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
