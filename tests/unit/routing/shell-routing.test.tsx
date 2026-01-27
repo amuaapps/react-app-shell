@@ -5,16 +5,15 @@
  * mounts the expected remote apps based on URL paths.
  */
 
-// Mock the loader to return stubs immediately for routing tests
-jest.mock('@/lib/remote-app-contract/loader', () => ({
-  loadRemoteApp: jest.fn().mockResolvedValue(
-    require('../../../src/stubs').coreAppStub
-  ),
-}));
-
 import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import App, { REMOTE_ROUTES } from '@/App';
+import { coreAppStub } from '@/stubs';
+
+// Mock the loader to return stubs immediately for routing tests
+jest.mock('@/lib/remote-app-contract/loader', () => ({
+  loadRemoteApp: jest.fn().mockResolvedValue(coreAppStub),
+}));
 
 describe('Shell Routing', () => {
   describe('Route Configuration', () => {
