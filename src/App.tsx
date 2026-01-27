@@ -39,7 +39,7 @@ const REMOTE_ROUTES = {
   core: {
     basePath: '/',
     remoteUrl: getRemoteUrl('core'),
-    remoteName: 'remoteApp_core',
+    remoteName: 'core',
     fallbackStub: coreAppStub,
     name: 'core',
   },
