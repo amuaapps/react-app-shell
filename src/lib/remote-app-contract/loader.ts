@@ -69,17 +69,25 @@ async function loadRemoteAppScript(
     script.onload = () => {
       const instance = getRemoteAppInstance(config.name);
       if (instance) {
+        console.log(`✅ Remote app "${config.name}" loaded successfully`);
         resolve(instance);
       } else {
+        const globalKey = `remoteApp_${config.name}`;
+        console.error(
+          `❌ Remote app "${config.name}" did not expose an instance on window.${globalKey}`,
+          'Available window properties:',
+          Object.keys(window).filter(k => k.startsWith('remoteApp'))
+        );
         reject(
           new Error(
-            `Remote app "${config.name}" did not expose an instance on window`
+            `Remote app "${config.name}" did not expose an instance on window.${globalKey}`
           )
         );
       }
     };
 
-    script.onerror = () => {
+    script.onerror = (error) => {
+      console.error(`❌ Failed to load script from ${config.url}`, error);
       reject(new Error(`Failed to load script from ${config.url}`));
     };
 
