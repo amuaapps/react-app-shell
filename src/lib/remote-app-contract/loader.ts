@@ -69,12 +69,10 @@ async function loadRemoteAppScript(
     script.onload = () => {
       const instance = getRemoteAppInstance(config.name);
       if (instance) {
-        // eslint-disable-next-line no-console
-        console.log(`✅ Remote app "${config.name}" loaded successfully`);
+        console.warn(`✅ Remote app "${config.name}" loaded successfully`);
         resolve(instance);
       } else {
         const globalKey = `remoteApp_${config.name}`;
-        // eslint-disable-next-line no-console
         console.error(
           `❌ Remote app "${config.name}" did not expose an instance on window.${globalKey}`,
           'Available window properties:',
@@ -89,7 +87,6 @@ async function loadRemoteAppScript(
     };
 
     script.onerror = (error) => {
-      // eslint-disable-next-line no-console
       console.error(`❌ Failed to load script from ${config.url}`, error);
       reject(new Error(`Failed to load script from ${config.url}`));
     };
