@@ -30,8 +30,12 @@ describe('loadRemoteApp', () => {
       onerror: null,
     } as unknown as HTMLScriptElement;
 
-    jest.spyOn(document, 'createElement').mockReturnValue(mockScript as HTMLScriptElement);
-    jest.spyOn(document.head, 'appendChild').mockImplementation(() => mockScript as Node);
+    jest
+      .spyOn(document, 'createElement')
+      .mockReturnValue(mockScript as HTMLScriptElement);
+    jest
+      .spyOn(document.head, 'appendChild')
+      .mockImplementation(() => mockScript as Node);
   });
 
   afterEach(() => {
@@ -87,12 +91,12 @@ describe('loadRemoteApp', () => {
         if (attemptCount === 1) {
           // First attempt fails
           const onerror = mockScript.onerror;
-        onerror?.(new Event('error'));
+          onerror?.(new Event('error'));
         } else {
           // Second attempt succeeds
           (window as any)[`remoteApp_${config.name}`] = mockInstance;
           const onload = mockScript.onload;
-      onload?.(new Event('load'));
+          onload?.(new Event('load'));
         }
       }, 10);
       return mockScript as Node;

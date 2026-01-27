@@ -34,3 +34,8 @@
 .home-page li {
   margin-bottom: var(--space-2);
 }
+
+.remote-app-container {
+  width: 100%;
+  min-height: 100%;
+}
