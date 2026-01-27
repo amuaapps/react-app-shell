@@ -407,9 +407,11 @@ jobs:
         continue-on-error: false
 
       - name: Health check GREEN revision
+        id: health_check
         run: |
           GREEN_URL="$GREEN_URL"
-          echo "Health checking GREEN: $GREEN_URL"
+          HEALTH_ENDPOINT="${GREEN_URL}/health"
+          echo "Health checking GREEN: $HEALTH_ENDPOINT"
           
           MAX_ATTEMPTS=10
           ATTEMPT=0
@@ -418,9 +420,13 @@ jobs:
             ATTEMPT=$((ATTEMPT + 1))
             echo "Attempt $ATTEMPT/$MAX_ATTEMPTS..."
             
-            if curl -f -s -m 10 "$GREEN_URL" > /dev/null; then
-              echo "✅ GREEN is healthy"
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "$HEALTH_ENDPOINT" || echo "000")
+            
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ GREEN is healthy (HTTP $HTTP_CODE)"
               exit 0
+            else
+              echo "❌ Health check returned HTTP $HTTP_CODE"
             fi
             
             if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
@@ -430,9 +436,11 @@ jobs:
           done
           
           echo "::error::GREEN health check failed after $MAX_ATTEMPTS attempts"
+          echo "HEALTH_CHECK_FAILED=true" >> $GITHUB_OUTPUT
           exit 1
 
       - name: Smoke test GREEN revision
+        id: smoke_test
         run: |
           GREEN_URL="$GREEN_URL"
           echo "Running smoke tests against GREEN: $GREEN_URL"
@@ -443,6 +451,7 @@ jobs:
             echo "✅ HTML content found"
           else
             echo "::error::No HTML content in response"
+            echo "SMOKE_TEST_FAILED=html_missing" >> $GITHUB_OUTPUT
             exit 1
           fi
           
@@ -450,6 +459,7 @@ jobs:
             echo "✅ React root element found"
           else
             echo "::error::React root element not found"
+            echo "SMOKE_TEST_FAILED=root_missing" >> $GITHUB_OUTPUT
             exit 1
           fi
           
@@ -476,18 +486,92 @@ jobs:
           echo ""
           echo "Access your application at: $ACTIVE_URL"
 
+      - name: Deployment failure summary
+        if: failure()
+        run: |
+          echo "::group::❌ Deployment Verification Failed"
+          echo ""
+          echo "## Failure Analysis"
+          echo ""
+          
+          # Determine what failed
+          FAILED_STEP="unknown"
+          if [ "${{ steps.health_check.outcome }}" = "failure" ]; then
+            FAILED_STEP="Health check"
+            echo "❌ **Health Check Failed**"
+            echo "   - GREEN revision did not respond to /health endpoint"
+            echo "   - Attempted 10 times over 100 seconds"
+            echo "   - GREEN URL: $GREEN_URL/health"
+          elif [ "${{ steps.smoke_test.outcome }}" = "failure" ]; then
+            FAILED_STEP="Smoke test"
+            echo "❌ **Smoke Test Failed**"
+            echo "   - GREEN revision responded but content validation failed"
+            echo "   - GREEN URL: $GREEN_URL"
+          elif [ "${{ steps.switch.outcome }}" = "failure" ]; then
+            FAILED_STEP="Traffic switch"
+            echo "❌ **Traffic Switch Failed**"
+            echo "   - Failed to switch traffic to GREEN"
+          else
+            echo "❌ **Unknown Failure**"
+            echo "   - Check logs above for details"
+          fi
+          
+          echo ""
+          echo "## Deployment State"
+          echo "   - GREEN revision: $GREEN_ID (deployed but not live)"
+          echo "   - BLUE revision: ${BLUE_ID:-<none>}"
+          echo "   - Active URL: $ACTIVE_URL"
+          echo ""
+          echo "::endgroup::"
+          
+          # Set output for rollback step
+          echo "FAILED_STEP=$FAILED_STEP" >> $GITHUB_ENV
+
       - name: Rollback on failure
         if: failure()
         run: |
-          echo "::error::Deployment verification failed. Rolling back to BLUE..."
+          echo "::group::🔄 Rolling Back to BLUE"
           
           if [ -z "$BLUE_ID" ]; then
             echo "::warning::No BLUE revision to rollback to (first deployment)"
+            echo ""
+            echo "## Rollback Status: SKIPPED"
+            echo "   - This is the first deployment"
+            echo "   - No previous BLUE revision exists"
+            echo "   - GREEN revision remains at 0% traffic"
+            echo ""
+            echo "::endgroup::"
             exit 0
           fi
           
+          echo "Initiating rollback..."
+          echo "   - Target: $BLUE_ID (previous stable revision)"
+          echo "   - Action: Set BLUE=100%, GREEN=0%"
+          echo ""
+          
           chmod +x scripts/ci/rollback-azure-bluegreen.sh
-          scripts/ci/rollback-azure-bluegreen.sh
+          if scripts/ci/rollback-azure-bluegreen.sh; then
+            echo ""
+            echo "## Rollback Status: ✅ SUCCESS"
+            echo "   - Traffic restored to BLUE revision"
+            echo "   - BLUE revision: $BLUE_ID (100% traffic)"
+            echo "   - GREEN revision: $GREEN_ID (0% traffic, available for debugging)"
+            echo "   - Active URL: $ACTIVE_URL (serving BLUE)"
+            echo ""
+            echo "The failed GREEN revision remains deployed at 0% traffic for investigation."
+          else
+            echo ""
+            echo "## Rollback Status: ❌ FAILED"
+            echo "::error::Rollback to BLUE failed!"
+            echo "::error::Manual intervention required!"
+            echo ""
+            echo "Current state is uncertain. Please check Azure Portal:"
+            echo "   - Resource Group: $AZURE_RESOURCE_GROUP_NAME"
+            echo "   - Container App: $AZURE_CONTAINER_APP_NAME"
+            exit 1
+          fi
+          
+          echo "::endgroup::"
         env:
           AZURE_RESOURCE_GROUP_NAME: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
