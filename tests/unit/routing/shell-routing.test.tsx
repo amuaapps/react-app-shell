@@ -124,7 +124,7 @@ describe('Shell Routing', () => {
           container.querySelector('[data-remote-app="core"]')
         ).not.toBeNull();
       });
-      
+
       expect(
         container.querySelector('[data-remote-app="campaigns"]')
       ).toBeNull();
@@ -174,7 +174,8 @@ describe('Shell Routing', () => {
       );
 
       await waitFor(() => {
-        const remoteContainers = container.querySelectorAll('[data-remote-app]');
+        const remoteContainers =
+          container.querySelectorAll('[data-remote-app]');
         expect(remoteContainers.length).toBe(1);
       });
     });
@@ -191,7 +192,7 @@ describe('Shell Routing', () => {
           coreContainer.querySelector('[data-remote-app="core"]')
         ).not.toBeNull();
       });
-      
+
       expect(
         coreContainer.querySelector('[data-remote-app="campaigns"]')
       ).toBeNull();
