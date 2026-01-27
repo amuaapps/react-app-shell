@@ -261,16 +261,17 @@ jobs:
           ENV="${{ needs.context.outputs.environment }}"
           
           # Set remote URLs based on environment
+          # Using actual Azure Container Apps environment URLs
           if [ "$ENV" == "prod" ]; then
-            CORE_URL="https://ca-react-app-core-prod.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
-            CAMPAIGNS_URL="https://ca-react-app-campaigns-prod.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
+            CORE_URL="https://react-app-core-prod.reddune-3f892dde.northeurope.azurecontainerapps.io/remoteEntry.js"
+            CAMPAIGNS_URL="https://react-app-campaigns-prod.reddune-3f892dde.northeurope.azurecontainerapps.io/remoteEntry.js"
           elif [ "$ENV" == "staging" ]; then
-            CORE_URL="https://ca-react-app-core-staging.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
-            CAMPAIGNS_URL="https://ca-react-app-campaigns-staging.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
+            CORE_URL="https://react-app-core-staging.reddune-3f892dde.northeurope.azurecontainerapps.io/remoteEntry.js"
+            CAMPAIGNS_URL="https://react-app-campaigns-staging.reddune-3f892dde.northeurope.azurecontainerapps.io/remoteEntry.js"
           else
             # dev environment
-            CORE_URL="https://ca-react-app-core-dev.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
-            CAMPAIGNS_URL="https://ca-react-app-campaigns-dev.westeurope.azurecontainerapps.io/assets/remoteEntry.js"
+            CORE_URL="https://react-app-core-dev.reddune-3f892dde.northeurope.azurecontainerapps.io/remoteEntry.js"
+            CAMPAIGNS_URL="https://react-app-campaigns-dev.reddune-3f892dde.northeurope.azurecontainerapps.io/remoteEntry.js"
           fi
           
           echo "core_url=$CORE_URL" >> $GITHUB_OUTPUT
