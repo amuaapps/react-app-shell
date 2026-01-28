@@ -102,4 +102,32 @@ describe('RemoteAppLoader', () => {
       expect(remoteContainer).toBeInTheDocument();
     });
   });
+
+  it('falls back to stub when loadRemoteApp throws error', async () => {
+    // Mock loadRemoteApp to throw an error
+    const { loadRemoteApp } = await import('@/lib/remote-app-contract/loader');
+    (loadRemoteApp as jest.Mock).mockRejectedValueOnce(
+      new Error('Failed to load remote app')
+    );
+
+    const { container } = render(
+      <MemoryRouter>
+        <RemoteAppLoader {...defaultProps} />
+      </MemoryRouter>
+    );
+
+    // Should show warning banner with "Development Mode:" text
+    await waitFor(() => {
+      expect(screen.getByText(/Development Mode:/i)).toBeInTheDocument();
+    });
+
+    // Should show "Using local stub" text
+    await waitFor(() => {
+      expect(screen.getByText(/Using local stub/i)).toBeInTheDocument();
+    });
+
+    // Should still render the fallback stub
+    const remoteContainer = container.querySelector('[data-remote-app="core"]');
+    expect(remoteContainer).toBeInTheDocument();
+  });
 });
