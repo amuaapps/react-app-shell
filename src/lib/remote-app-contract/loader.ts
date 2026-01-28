@@ -129,9 +129,10 @@ async function loadRemoteAppScript(
       );
       console.warn(
         `🔍 window.${containerName} keys:`,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         (window as any)[containerName]
-          ? Object.keys((window as any)[containerName])
+          ? // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+            Object.keys((window as any)[containerName])
           : 'null'
       );
 
