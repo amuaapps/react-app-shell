@@ -106,42 +106,17 @@ async function loadRemoteAppScript(
       }
 
       // Load the bootstrap module
-      // container.get() returns a factory function that returns the module
+      // container.get() returns a factory function
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const factory = await container.get('./bootstrap');
 
-      console.warn(`🔍 Factory type:`, typeof factory);
+      // Call the factory - this executes the bootstrap code as a side effect
+      // which sets window.remoteApp_core
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      factory();
 
-      // Call the factory to get the module
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-      const module = factory();
-
-      console.warn(`🔍 Module returned by factory():`, module);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      console.warn(`🔍 Module keys:`, module ? Object.keys(module) : 'null');
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      console.warn(`🔍 module.default:`, module?.default);
-      console.warn(
-        `🔍 window.${containerName}:`,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (window as any)[containerName]
-      );
-
-      // The module's default export contains the RemoteAppInstance
-      // The bootstrap also sets window.remoteApp_core, so check both
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if (module?.default) {
-        // Use the module's default export
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        instance = module.default as RemoteAppInstance;
-        console.warn(
-          `✅ Got instance from module.default for "${config.name}"`
-        );
-      } else {
-        // Fall back to checking window
-        instance = getRemoteAppInstance(config.name);
-        console.warn(`✅ Got instance from window for "${config.name}"`);
-      }
+      // Retrieve the instance from window after bootstrap execution
+      instance = getRemoteAppInstance(config.name);
     } catch (error) {
       console.error(
         `❌ Failed to load bootstrap module from ${containerName}`,
