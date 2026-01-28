@@ -1,9 +1,9 @@
 /**
  * Mock for loadRemoteApp in tests
- * Returns stubs immediately instead of trying to load from network
+ * Returns stubs immediately instead of trying to load from network or import bootstrap
  */
 
-import type {
+import {
   RemoteAppConfig,
   RemoteAppInstance,
 } from '../../../../src/lib/remote-app-contract/types';
@@ -13,11 +13,12 @@ export async function loadRemoteApp(
   config: RemoteAppConfig
 ): Promise<RemoteAppInstance> {
   // In tests, immediately return the appropriate stub based on the remote name
-  if (config.name === 'remoteApp_core') {
+  // This bypasses the bootstrap import which would fail in test environment
+  if (config.name === 'core') {
     return Promise.resolve(coreAppStub);
   }
 
-  if (config.name === 'remoteApp_campaigns') {
+  if (config.name === 'campaigns') {
     return Promise.resolve(campaignsAppStub);
   }
 

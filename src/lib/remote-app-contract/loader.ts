@@ -57,38 +57,74 @@ async function loadRemoteAppWithTimeout(
 
 /**
  * Load the remote app script and retrieve the instance
+ *
+ * For Module Federation apps, we need to:
+ * 1. Load the remoteEntry.js script
+ * 2. Explicitly import the bootstrap module to trigger initialization
+ * 3. Retrieve the exposed instance from window
  */
 async function loadRemoteAppScript(
   config: RemoteAppConfig
 ): Promise<RemoteAppInstance> {
+  // Step 1: Load the remoteEntry.js script
+  await loadRemoteEntryScript(config.url);
+
+  // Step 2: Check if instance already exists (e.g., in tests)
+  let instance = getRemoteAppInstance(config.name);
+
+  // Step 3: If not, explicitly import the bootstrap module
+  // This is required for Module Federation to expose window.remoteApp_*
+  if (!instance) {
+    const moduleName = `remoteApp_${config.name}`;
+    try {
+      await import(/* @vite-ignore */ `${moduleName}/bootstrap`);
+    } catch (error) {
+      console.error(
+        `❌ Failed to import bootstrap module from ${moduleName}/bootstrap`,
+        error
+      );
+      throw new Error(
+        `Failed to import bootstrap module from ${moduleName}/bootstrap: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+
+    // Retrieve the instance after bootstrap import
+    instance = getRemoteAppInstance(config.name);
+  }
+
+  // Step 4: Verify instance exists
+  if (instance) {
+    console.warn(`✅ Remote app "${config.name}" loaded successfully`);
+    return instance;
+  } else {
+    const globalKey = `remoteApp_${config.name}`;
+    console.error(
+      `❌ Remote app "${config.name}" did not expose an instance on window.${globalKey}`,
+      'Available window properties:',
+      Object.keys(window).filter((k) => k.startsWith('remoteApp'))
+    );
+    throw new Error(
+      `Remote app "${config.name}" did not expose an instance on window.${globalKey}`
+    );
+  }
+}
+
+/**
+ * Load the remoteEntry.js script into the document
+ */
+function loadRemoteEntryScript(url: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = config.url;
+    script.src = url;
     script.type = 'module';
 
     script.onload = () => {
-      const instance = getRemoteAppInstance(config.name);
-      if (instance) {
-        console.warn(`✅ Remote app "${config.name}" loaded successfully`);
-        resolve(instance);
-      } else {
-        const globalKey = `remoteApp_${config.name}`;
-        console.error(
-          `❌ Remote app "${config.name}" did not expose an instance on window.${globalKey}`,
-          'Available window properties:',
-          Object.keys(window).filter((k) => k.startsWith('remoteApp'))
-        );
-        reject(
-          new Error(
-            `Remote app "${config.name}" did not expose an instance on window.${globalKey}`
-          )
-        );
-      }
+      resolve();
     };
 
     script.onerror = (error) => {
-      console.error(`❌ Failed to load script from ${config.url}`, error);
-      reject(new Error(`Failed to load script from ${config.url}`));
+      console.error(`❌ Failed to load script from ${url}`, error);
+      reject(new Error(`Failed to load script from ${url}`));
     };
 
     document.head.appendChild(script);
