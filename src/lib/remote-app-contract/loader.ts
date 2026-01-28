@@ -75,7 +75,7 @@ async function loadRemoteAppScript(
   // Step 3: If not, load the bootstrap module via Module Federation container
   // This is required for Module Federation to expose window.remoteApp_*
   if (!instance) {
-    const containerName = `remoteApp_${config.name}`;
+    const containerName = `__remoteApp_${config.name}_container__`;
     try {
       // Access the Module Federation container
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
@@ -106,38 +106,24 @@ async function loadRemoteAppScript(
       }
 
       // Load the bootstrap module
-      // container.get() returns a factory function
+      // container.get() returns a factory function that returns the module
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const factory = await container.get('./bootstrap');
 
-      console.warn(
-        `🔍 Before factory() call, window.${containerName}:`,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (window as any)[containerName]
-      );
-
-      // Call the factory - this executes the bootstrap code as a side effect
-      // which sets window.remoteApp_core
+      // Call the factory to get the module
+      // The module's default export is the RemoteAppInstance
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-      const result = factory();
+      const module = factory();
 
-      console.warn(`🔍 Factory returned:`, result);
-      console.warn(
-        `🔍 After factory() call, window.${containerName}:`,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (window as any)[containerName]
-      );
-      console.warn(
-        `🔍 window.${containerName} keys:`,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (window as any)[containerName]
-          ? // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-            Object.keys((window as any)[containerName])
-          : 'null'
-      );
+      // Get the instance from the module's default export
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      instance = module?.default as RemoteAppInstance;
 
-      // Retrieve the instance from window after bootstrap execution
-      instance = getRemoteAppInstance(config.name);
+      if (!instance) {
+        throw new Error(
+          `Bootstrap module for "${config.name}" did not export a default RemoteAppInstance`
+        );
+      }
     } catch (error) {
       console.error(
         `❌ Failed to load bootstrap module from ${containerName}`,
