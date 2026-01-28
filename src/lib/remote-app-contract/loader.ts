@@ -72,24 +72,56 @@ async function loadRemoteAppScript(
   // Step 2: Check if instance already exists (e.g., in tests)
   let instance = getRemoteAppInstance(config.name);
 
-  // Step 3: If not, explicitly import the bootstrap module
+  // Step 3: If not, load the bootstrap module via Module Federation container
   // This is required for Module Federation to expose window.remoteApp_*
   if (!instance) {
-    const moduleName = `remoteApp_${config.name}`;
+    const containerName = `remoteApp_${config.name}`;
     try {
-      await import(/* @vite-ignore */ `${moduleName}/bootstrap`);
+      // Access the Module Federation container
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const container = (window as any)[containerName];
+
+      if (!container) {
+        throw new Error(
+          `Module Federation container '${containerName}' not found on window`
+        );
+      }
+
+      // Initialize the container if needed
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (container.init) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        await container.init({
+          react: {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            get: () => Promise.resolve(() => require('react')),
+            loaded: true,
+          },
+          'react-dom': {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            get: () => Promise.resolve(() => require('react-dom')),
+            loaded: true,
+          },
+        });
+      }
+
+      // Load the bootstrap module
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const factory = await container.get('./bootstrap');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      factory();
+
+      // Retrieve the instance after bootstrap execution
+      instance = getRemoteAppInstance(config.name);
     } catch (error) {
       console.error(
-        `❌ Failed to import bootstrap module from ${moduleName}/bootstrap`,
+        `❌ Failed to load bootstrap module from ${containerName}`,
         error
       );
       throw new Error(
-        `Failed to import bootstrap module from ${moduleName}/bootstrap: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to load bootstrap module: ${error instanceof Error ? error.message : String(error)}`
       );
     }
-
-    // Retrieve the instance after bootstrap import
-    instance = getRemoteAppInstance(config.name);
   }
 
   // Step 4: Verify instance exists

@@ -18,11 +18,113 @@ The core app URL is configured per environment:
 
 **Note:** Update the region (`westeurope`) in `.env.*` files to match your actual Azure region.
 
-## Module Federation Details
+## Module Federation Configuration
 
-- **Remote Name:** `remoteApp_core`
-- **Exposed Module:** `./bootstrap`
-- **Contract Version:** `1` (fully compliant with RemoteAppContract)
+### Shell Configuration (Already Implemented)
+
+The shell loads the core app by:
+1. Loading `remoteEntry.js` from the configured URL
+2. Dynamically importing `remoteApp_core/bootstrap`
+3. Expecting `window.remoteApp_core` to be exposed
+
+### Core App Requirements
+
+**The core app MUST expose the `bootstrap` module in its Module Federation config.**
+
+#### Vite Module Federation Config (vite.config.ts)
+
+```typescript
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import federation from '@originjs/vite-plugin-federation';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    federation({
+      name: 'remoteApp_core',
+      filename: 'remoteEntry.js',
+      exposes: {
+        './bootstrap': './src/bootstrap.tsx', // REQUIRED
+      },
+      shared: {
+        react: {
+          singleton: true,
+          requiredVersion: '^18.2.0',
+        },
+        'react-dom': {
+          singleton: true,
+          requiredVersion: '^18.2.0',
+        },
+      },
+    }),
+  ],
+  build: {
+    target: 'esnext',
+    minify: false,
+    cssCodeSplit: false,
+  },
+});
+```
+
+#### Bootstrap Module (src/bootstrap.tsx)
+
+```typescript
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+
+let root: ReactDOM.Root | null = null;
+
+// Expose the remote app on window
+window.remoteApp_core = {
+  mount: (container: HTMLElement, config: { basePath: string }) => {
+    root = ReactDOM.createRoot(container);
+    root.render(
+      <React.StrictMode>
+        <BrowserRouter basename={config.basePath}>
+          <App />
+        </BrowserRouter>
+      </React.StrictMode>
+    );
+  },
+  unmount: () => {
+    if (root) {
+      root.unmount();
+      root = null;
+    }
+  },
+  version: '1',
+};
+
+// Export empty object to satisfy module requirements
+export {};
+```
+
+#### Type Declarations (src/vite-env.d.ts)
+
+```typescript
+interface RemoteAppInstance {
+  mount: (container: HTMLElement, config: { basePath: string }) => void;
+  unmount: () => void;
+  version: string;
+}
+
+declare global {
+  interface Window {
+    remoteApp_core: RemoteAppInstance;
+  }
+}
+
+export {};
+```
+
+### Summary
+
+- **Exposed Module:** `./bootstrap` → `src/bootstrap.tsx`
+- **Global Variable:** `window.remoteApp_core`
+- **Contract Version:** `1`
 - **Shared Dependencies:** React 18.2.0 (singleton), React DOM 18.2.0 (singleton)
 
 ## How It Works
