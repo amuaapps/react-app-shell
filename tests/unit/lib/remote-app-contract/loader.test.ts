@@ -69,6 +69,33 @@ describe('loadRemoteApp', () => {
     expect(mockScript.type).toBe('module');
   });
 
+  it('should skip bootstrap import if instance already exists on window', async () => {
+    const config: RemoteAppConfig = {
+      name: 'test-app',
+      url: 'http://localhost:3000/remoteEntry.js',
+    };
+
+    const mockInstance: RemoteAppInstance = {
+      mount: jest.fn(),
+      unmount: jest.fn(),
+      contractVersion: REMOTE_APP_CONTRACT_VERSION,
+    };
+
+    // Pre-populate window with instance (e.g., from a previous load or test setup)
+    (window as any)[`remoteApp_${config.name}`] = mockInstance;
+
+    // Simulate successful script load
+    setTimeout(() => {
+      const onload = mockScript.onload;
+      onload?.(new Event('load'));
+    }, 10);
+
+    const result = await loadRemoteApp(config);
+
+    // Should return the instance without attempting bootstrap import
+    expect(result).toBe(mockInstance);
+  });
+
   it('should retry on failure and succeed on second attempt', async () => {
     const config: RemoteAppConfig = {
       name: 'test-app',
