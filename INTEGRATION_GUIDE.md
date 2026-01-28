@@ -69,6 +69,8 @@ export default defineConfig({
 
 #### Bootstrap Module (src/bootstrap.tsx)
 
+**IMPORTANT:** The bootstrap module must expose `window.remoteApp_core` immediately when loaded.
+
 ```typescript
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -77,7 +79,7 @@ import App from './App';
 
 let root: ReactDOM.Root | null = null;
 
-// Expose the remote app on window
+// Expose the remote app on window immediately
 window.remoteApp_core = {
   mount: (container: HTMLElement, config: { basePath: string }) => {
     root = ReactDOM.createRoot(container);
@@ -88,6 +90,7 @@ window.remoteApp_core = {
         </BrowserRouter>
       </React.StrictMode>
     );
+    return Promise.resolve({ success: true });
   },
   unmount: () => {
     if (root) {
@@ -95,11 +98,30 @@ window.remoteApp_core = {
       root = null;
     }
   },
-  version: '1',
+  contractVersion: '1',
 };
 
 // Export empty object to satisfy module requirements
 export {};
+```
+
+#### Main Entry Point (src/main.tsx)
+
+The main entry should import bootstrap to ensure it executes:
+
+```typescript
+import './bootstrap';
+
+// Optionally, if running standalone:
+// import React from 'react';
+// import ReactDOM from 'react-dom/client';
+// import App from './App';
+//
+// ReactDOM.createRoot(document.getElementById('root')!).render(
+//   <React.StrictMode>
+//     <App />
+//   </React.StrictMode>
+// );
 ```
 
 #### Type Declarations (src/vite-env.d.ts)
@@ -225,17 +247,26 @@ Open browser DevTools console and verify:
 
 ### Module Federation errors
 
-**Symptoms:** `window.remoteApp_core is not defined`
+**Symptoms:** `Module Federation container 'remoteApp_core' not found on window`
 
 **Possible causes:**
-1. Core app not exposing correct module name
-2. Core app build failed
-3. Wrong remote entry URL
+1. Core app's `bootstrap.tsx` not exposing `window.remoteApp_core`
+2. Bootstrap module not being imported/executed
+3. Core app build configuration issue
 
 **Solutions:**
-1. Verify core app webpack/vite config exposes `remoteApp_core`
-2. Check core app build logs
-3. Test remoteEntry.js loads and defines global variable
+1. **Verify bootstrap.tsx sets `window.remoteApp_core`** immediately (not in a function)
+2. **Ensure main.tsx imports bootstrap:** `import './bootstrap';`
+3. **Check the built remoteEntry.js** loads and executes bootstrap
+4. **Test in browser console:** After remoteEntry.js loads, check if `window.remoteApp_core` exists
+5. **Verify Module Federation config** exposes `./bootstrap` correctly
+
+**Debug steps:**
+```javascript
+// In browser console after remoteEntry.js loads:
+console.log(window.remoteApp_core); // Should be an object with mount, unmount, contractVersion
+console.log(Object.keys(window).filter(k => k.startsWith('remoteApp'))); // Should show ['remoteApp_core']
+```
 
 ### Contract version mismatch
 

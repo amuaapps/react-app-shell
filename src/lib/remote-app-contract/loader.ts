@@ -106,8 +106,11 @@ async function loadRemoteAppScript(
       }
 
       // Load the bootstrap module
+      // container.get() returns a factory function that returns the module
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const factory = await container.get('./bootstrap');
+      // Call the factory to execute the bootstrap code
+      // This will set window.remoteApp_core
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       factory();
 
