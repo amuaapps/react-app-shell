@@ -21,6 +21,7 @@ import { getEnv } from '@/lib/env-provider';
 export interface RemoteConfig {
   coreRemoteEntryUrl: string;
   campaignsRemoteEntryUrl: string;
+  secondaryRemoteEntryUrl: string;
 }
 
 /**
@@ -33,6 +34,9 @@ const DEFAULT_CONFIG: RemoteConfig = {
 
   // Campaigns app runs on port 3003 in local dev
   campaignsRemoteEntryUrl: 'http://localhost:3003/remoteEntry.js',
+
+  // Secondary app runs on port 3004 in local dev
+  secondaryRemoteEntryUrl: 'http://localhost:3004/remoteEntry.js',
 };
 
 /**
@@ -55,6 +59,10 @@ export function getRemoteConfig(): RemoteConfig {
     campaignsRemoteEntryUrl:
       getEnv('CAMPAIGNS_REMOTE_ENTRY_URL') ||
       DEFAULT_CONFIG.campaignsRemoteEntryUrl,
+
+    secondaryRemoteEntryUrl:
+      getEnv('SECONDARY_REMOTE_ENTRY_URL') ||
+      DEFAULT_CONFIG.secondaryRemoteEntryUrl,
   };
 }
 
@@ -76,11 +84,13 @@ export function isValidRemoteUrl(url: string): boolean {
 /**
  * Get configuration for a specific remote application
  *
- * @param remoteName - Name of the remote app ('core' or 'campaigns')
+ * @param remoteName - Name of the remote app ('core', 'campaigns', or 'secondary')
  * @returns The remote entry URL for the specified app
  * @throws Error if remote name is invalid
  */
-export function getRemoteUrl(remoteName: 'core' | 'campaigns'): string {
+export function getRemoteUrl(
+  remoteName: 'core' | 'campaigns' | 'secondary'
+): string {
   const config = getRemoteConfig();
 
   switch (remoteName) {
@@ -88,6 +98,8 @@ export function getRemoteUrl(remoteName: 'core' | 'campaigns'): string {
       return config.coreRemoteEntryUrl;
     case 'campaigns':
       return config.campaignsRemoteEntryUrl;
+    case 'secondary':
+      return config.secondaryRemoteEntryUrl;
     default:
       throw new Error(`Unknown remote application: ${remoteName as string}`);
   }

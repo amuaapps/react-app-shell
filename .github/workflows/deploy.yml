@@ -265,19 +265,24 @@ jobs:
           if [ "$ENV" == "prod" ]; then
             CORE_URL="https://react-app-core-prod.reddune-3f892dde.northeurope.azurecontainerapps.io/assets/remoteEntry.js"
             CAMPAIGNS_URL="https://react-app-campaigns-prod.reddune-3f892dde.northeurope.azurecontainerapps.io/assets/remoteEntry.js"
+            SECONDARY_URL="https://react-app-secondary-prod.proudground-2162e631.northeurope.azurecontainerapps.io/assets/remoteEntry.js"
           elif [ "$ENV" == "staging" ]; then
             CORE_URL="https://react-app-core-staging.reddune-3f892dde.northeurope.azurecontainerapps.io/assets/remoteEntry.js"
             CAMPAIGNS_URL="https://react-app-campaigns-staging.reddune-3f892dde.northeurope.azurecontainerapps.io/assets/remoteEntry.js"
+            SECONDARY_URL="https://react-app-secondary-staging.proudground-2162e631.northeurope.azurecontainerapps.io/assets/remoteEntry.js"
           else
             # dev environment
             CORE_URL="https://react-app-core-dev.reddune-3f892dde.northeurope.azurecontainerapps.io/assets/remoteEntry.js"
             CAMPAIGNS_URL="https://react-app-campaigns-dev.reddune-3f892dde.northeurope.azurecontainerapps.io/assets/remoteEntry.js"
+            SECONDARY_URL="https://react-app-secondary-dev.proudground-2162e631.northeurope.azurecontainerapps.io/assets/remoteEntry.js"
           fi
           
           echo "core_url=$CORE_URL" >> $GITHUB_OUTPUT
           echo "campaigns_url=$CAMPAIGNS_URL" >> $GITHUB_OUTPUT
+          echo "secondary_url=$SECONDARY_URL" >> $GITHUB_OUTPUT
           echo "Core URL: $CORE_URL"
           echo "Campaigns URL: $CAMPAIGNS_URL"
+          echo "Secondary URL: $SECONDARY_URL"
 
       - name: Build and push Docker image
         id: build
@@ -293,6 +298,7 @@ jobs:
             NPM_PACKAGE_TOKEN=${{ secrets.NPM_PACKAGE_TOKEN }}
             VITE_CORE_REMOTE_ENTRY_URL=${{ steps.remote_urls.outputs.core_url }}
             VITE_CAMPAIGNS_REMOTE_ENTRY_URL=${{ steps.remote_urls.outputs.campaigns_url }}
+            VITE_SECONDARY_REMOTE_ENTRY_URL=${{ steps.remote_urls.outputs.secondary_url }}
 
       - name: Extract single image reference
         id: image_ref

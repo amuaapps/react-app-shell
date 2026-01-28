@@ -5,12 +5,14 @@
  *
  * Route Ownership:
  * - /campaigns/* → Campaigns remote app
+ * - /secondary/* → Secondary remote app
  * - /* → Core remote app (default/catch-all)
  *
  * Route Matching Order (deterministic):
  * 1. /campaigns/* - Exact prefix match for campaigns routes
- * 2. / - Index route (home page)
- * 3. /* - Catch-all for all other routes (handled by core app)
+ * 2. /secondary/* - Exact prefix match for secondary routes
+ * 3. / - Index route (home page)
+ * 4. /* - Catch-all for all other routes (handled by core app)
  *
  * Design Principles:
  * - Shell only knows top-level route prefixes, not internal remote routes
@@ -22,7 +24,7 @@ import { Routes, Route } from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
 import RemoteAppMount from '@/components/RemoteAppMount';
 import RemoteAppLoader from '@/components/RemoteAppLoader';
-import { coreAppStub, campaignsAppStub } from '@/stubs';
+import { coreAppStub, campaignsAppStub, secondaryAppStub } from '@/stubs';
 import { getRemoteUrl } from '@/config/remotes';
 
 /**
@@ -35,6 +37,14 @@ const REMOTE_ROUTES = {
     basePath: '/campaigns',
     remoteApp: campaignsAppStub,
     name: 'campaigns',
+  },
+  secondary: {
+    path: 'secondary/*',
+    basePath: '/secondary',
+    remoteUrl: getRemoteUrl('secondary'),
+    remoteName: 'secondary',
+    fallbackStub: secondaryAppStub,
+    name: 'secondary',
   },
   core: {
     basePath: '/',
@@ -57,6 +67,20 @@ function App() {
               remoteApp={REMOTE_ROUTES.campaigns.remoteApp}
               basePath={REMOTE_ROUTES.campaigns.basePath}
               name={REMOTE_ROUTES.campaigns.name}
+            />
+          }
+        />
+
+        {/* Secondary app - matches /secondary and all sub-routes */}
+        <Route
+          path={REMOTE_ROUTES.secondary.path}
+          element={
+            <RemoteAppLoader
+              name={REMOTE_ROUTES.secondary.name}
+              remoteUrl={REMOTE_ROUTES.secondary.remoteUrl}
+              remoteName={REMOTE_ROUTES.secondary.remoteName}
+              basePath={REMOTE_ROUTES.secondary.basePath}
+              fallbackStub={REMOTE_ROUTES.secondary.fallbackStub}
             />
           }
         />

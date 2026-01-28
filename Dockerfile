@@ -30,9 +30,15 @@ COPY . .
 # These are baked into the build at compile time
 ARG VITE_CORE_REMOTE_ENTRY_URL
 ARG VITE_CAMPAIGNS_REMOTE_ENTRY_URL
+ARG VITE_SECONDARY_REMOTE_ENTRY_URL
 
 # Build the application with environment variables
 RUN npm run build
+
+# Set environment variables
+ENV VITE_CORE_REMOTE_ENTRY_URL=${VITE_CORE_REMOTE_ENTRY_URL}
+ENV VITE_CAMPAIGNS_REMOTE_ENTRY_URL=${VITE_CAMPAIGNS_REMOTE_ENTRY_URL}
+ENV VITE_SECONDARY_REMOTE_ENTRY_URL=${VITE_SECONDARY_REMOTE_ENTRY_URL}
 
 # Stage 2: Serve with Nginx
 FROM nginx:1.25-alpine

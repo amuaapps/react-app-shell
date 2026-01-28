@@ -8,3 +8,4 @@
 
 export { coreAppStub } from './core-app-stub';
 export { campaignsAppStub } from './campaigns-app-stub';
+export { secondaryAppStub } from './secondary-app-stub';
