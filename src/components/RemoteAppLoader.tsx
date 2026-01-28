@@ -58,7 +58,7 @@ export default function RemoteAppLoader({
 
         // Attempt to load the remote app
         const instance = await loadRemoteApp({
-          name: remoteName,
+          name: name, // Use 'core' not 'remoteApp_core'
           url: remoteUrl,
           basePath,
           timeout: 10000, // 10 second timeout
