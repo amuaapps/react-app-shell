@@ -110,10 +110,30 @@ async function loadRemoteAppScript(
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const factory = await container.get('./bootstrap');
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      console.warn(
+        `🔍 Before factory() call, window.${containerName}:`,
+        (window as any)[containerName]
+      );
+
       // Call the factory - this executes the bootstrap code as a side effect
       // which sets window.remoteApp_core
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      factory();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+      const result = factory();
+
+      console.warn(`🔍 Factory returned:`, result);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      console.warn(
+        `🔍 After factory() call, window.${containerName}:`,
+        (window as any)[containerName]
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+      console.warn(
+        `🔍 window.${containerName} keys:`,
+        (window as any)[containerName]
+          ? Object.keys((window as any)[containerName])
+          : 'null'
+      );
 
       // Retrieve the instance from window after bootstrap execution
       instance = getRemoteAppInstance(config.name);
