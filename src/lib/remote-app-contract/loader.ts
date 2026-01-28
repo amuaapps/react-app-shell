@@ -109,19 +109,21 @@ async function loadRemoteAppScript(
       // container.get() returns a factory function that returns the module
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const factory = await container.get('./bootstrap');
-      
+
       console.warn(`🔍 Factory type:`, typeof factory);
-      
+
       // Call the factory to get the module
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       const module = factory();
-      
+
       console.warn(`🔍 Module returned by factory():`, module);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       console.warn(`🔍 Module keys:`, module ? Object.keys(module) : 'null');
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       console.warn(`🔍 module.default:`, module?.default);
       console.warn(
         `🔍 window.${containerName}:`,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         (window as any)[containerName]
       );
 
