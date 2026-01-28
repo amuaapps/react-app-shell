@@ -56,6 +56,10 @@ export default function RemoteAppLoader({
       try {
         setIsLoading(true);
 
+        console.warn(
+          `🔄 Attempting to load remote app "${name}" from ${remoteUrl}`
+        );
+
         // Attempt to load the remote app
         const instance = await loadRemoteApp({
           name: name, // Use 'core' not 'remoteApp_core'
@@ -65,12 +69,15 @@ export default function RemoteAppLoader({
           retries: 2,
         });
 
+        console.warn(`✅ Successfully loaded remote app "${name}"`, instance);
+
         if (mounted) {
           setRemoteApp(instance);
           setIsLoading(false);
           setUseFallback(false);
         }
       } catch (error) {
+        console.error(`❌ Error loading remote app "${name}":`, error);
         reportError(`Failed to load remote app "${name}"`, error, {
           remoteName: name,
           remoteUrl,
