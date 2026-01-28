@@ -142,8 +142,10 @@ describe('loadRemoteApp', () => {
       onload?.(new Event('load'));
     }, 10);
 
+    // With the new bootstrap import approach, if instance is not on window,
+    // it will try to import the bootstrap module which will fail in test env
     await expect(loadRemoteApp(config)).rejects.toThrow(
-      /Remote app "test-app" did not expose an instance on window/
+      /Failed to import bootstrap module/
     );
   });
 
