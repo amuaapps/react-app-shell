@@ -2,6 +2,14 @@
 
 A modern React application shell following MACH principles and Amua Apps coding standards. This is the **host application** for a micro-frontend architecture that dynamically loads and mounts remote React applications.
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Analytics](#analytics)
+- [Purpose & Repository Relationships](#purpose--repository-relationships)
+- [Getting Started](#getting-started)
+- [Configuring Remote Entry URLs](#configuring-remote-entry-urls)
+
 ## Purpose & Repository Relationships
 
 ### What This Repository Does

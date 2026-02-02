@@ -11,6 +11,7 @@ import './styles/theme-core.css';
 import App from './App';
 import './styles/index.css';
 import { setErrorReporter, ConsoleErrorReporter } from './lib/error-reporter';
+import { AnalyticsProvider } from './analytics';
 
 // Configure error reporting for development
 // In dev: logs to console for debugging remote loading failures
@@ -27,8 +28,10 @@ if (!rootElement) {
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <AnalyticsProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </AnalyticsProvider>
   </React.StrictMode>
 );

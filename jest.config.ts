@@ -8,6 +8,7 @@ const config: Config = {
   moduleNameMapper: {
     // Mock env-provider for Jest to avoid import.meta parsing issues
     '^@/lib/env-provider$': '<rootDir>/tests/__mocks__/lib/env-provider.ts',
+    '^@/analytics$': '<rootDir>/tests/__mocks__/analytics.tsx',
     '^@amuaapps/ui-library$': '<rootDir>/tests/__mocks__/@amuaapps/ui-library.tsx',
     '^@/components/(.*)$': '<rootDir>/src/components/$1',
     '^@/layouts/(.*)$': '<rootDir>/src/layouts/$1',

@@ -26,6 +26,7 @@ import RemoteAppMount from '@/components/RemoteAppMount';
 import RemoteAppLoader from '@/components/RemoteAppLoader';
 import { coreAppStub, campaignsAppStub, secondaryAppStub } from '@/stubs';
 import { getRemoteUrl } from '@/config/remotes';
+import { useShellPageViews } from '@/analytics';
 
 /**
  * Route configuration for remote apps
@@ -56,6 +57,9 @@ const REMOTE_ROUTES = {
 } as const;
 
 function App() {
+  // Auto-track page views and session starts
+  useShellPageViews();
+
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
