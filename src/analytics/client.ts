@@ -4,12 +4,16 @@
  * Central analytics client that MFEs use to emit events.
  */
 
-import type { AnalyticsClient, AllowedEventName, PropertiesFor, Consent } from './types';
-import { eventRegistry } from '@amuaapps/analytics-sku/taxonomy';
-import { getOrCreateSessionId } from './session';
-import { getConsent, updateConsent } from './consent';
-import { buildTrackEvent, buildPageEvent, buildIdentifyEvent } from './eventBuilder';
-import { createEventTransport } from './transport';
+import type {
+  AnalyticsClient,
+  AllowedEventName,
+  PropertiesFor,
+  Consent,
+  AnalyticsConfig,
+  Actor,
+} from './types';
+import { EventBuilder } from './eventBuilder';
+import { AnalyticsTransport } from './transport';
 import { collectContext } from './contextCollector';
 import {
   getConsent,

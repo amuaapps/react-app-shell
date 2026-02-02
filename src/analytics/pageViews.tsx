@@ -89,7 +89,7 @@ export function useShellPageViews() {
       const referrer_host = getReferrerHost();
 
       // Emit session_started event
-      analytics.track('web.session_started@1', {
+      analytics.track('web.session_started', {
         ...utmParams,
         landing_path: location.pathname,
         referrer_host,
