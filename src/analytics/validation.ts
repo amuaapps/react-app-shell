@@ -8,6 +8,11 @@
 import type { AllowedEventName } from './types';
 
 /**
+ * Check if we're in development mode (works in both Vite and Jest)
+ */
+const isDev = process.env.NODE_ENV !== 'production';
+
+/**
  * All allowed event names (from SKU registry)
  */
 const ALLOWED_EVENT_NAMES: Set<AllowedEventName> = new Set([
@@ -111,37 +116,32 @@ export function validateProperties(
 }
 
 /**
- * Validate a complete event before sending
+ * Validate an event before sending
  *
  * @param name - Event name
  * @param properties - Event properties
- * @returns true if valid, false otherwise (logs warnings in dev)
+ * @throws Error if validation fails
  */
 export function validateEvent(
   name: string,
   properties: Record<string, unknown>
-): boolean {
+): void {
   // Validate event name
   if (!validateEventName(name)) {
-    if (import.meta.env.DEV) {
-      console.warn(
-        `[Analytics] Invalid event name "${name}". Event not in SKU registry.`
-      );
+    const error = `Invalid event name: "${name}". Must be one of: ${Array.from(ALLOWED_EVENT_NAMES).join(', ')}`;
+    if (isDev) {
+      console.error('[Analytics Validation]', error);
     }
-    return false;
+    throw new Error(error);
   }
 
   // Validate properties
-  const propertiesResult = validateProperties(name, properties);
-  if (!propertiesResult.valid) {
-    if (import.meta.env.DEV) {
-      console.warn(
-        `[Analytics] Invalid properties for event "${name}":`,
-        propertiesResult.errors
-      );
+  const validation = validateProperties(name as AllowedEventName, properties);
+  if (!validation.valid) {
+    const error = `Invalid event properties for "${name}": ${validation.errors.join(', ')}`;
+    if (isDev) {
+      console.error('[Analytics Validation]', error, properties);
     }
-    return false;
+    throw new Error(error);
   }
-
-  return true;
 }
