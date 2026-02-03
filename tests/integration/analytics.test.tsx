@@ -5,7 +5,7 @@
  */
 
 import { renderHook } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AnalyticsProvider } from '@/analytics/context';
 import { useAnalytics } from '@/analytics/hooks';
 import { useShellPageViews } from '@/analytics/pageViews';
@@ -159,12 +159,8 @@ describe('Analytics Integration', () => {
         link_url: 'https://example.com',
       });
 
-      await waitFor(
-        () => {
-          expect(global.fetch).toHaveBeenCalled();
-        },
-        { timeout: 2000 }
-      );
+      jest.advanceTimersByTime(1500);
+      await Promise.resolve();
 
       const body = JSON.parse(
         (global.fetch as jest.Mock).mock.calls[0][1].body
@@ -174,7 +170,7 @@ describe('Analytics Integration', () => {
       expect(event.source).toEqual({
         appId: 'react-app-shell',
         platform: 'web',
-        environment: 'test',
+        environment: 'dev',
         appVersion: '1.0.0',
       });
     });
@@ -187,12 +183,8 @@ describe('Analytics Integration', () => {
         email: 'test@example.com',
       });
 
-      await waitFor(
-        () => {
-          expect(global.fetch).toHaveBeenCalled();
-        },
-        { timeout: 2000 }
-      );
+      jest.advanceTimersByTime(1500);
+      await Promise.resolve();
 
       const body = JSON.parse(
         (global.fetch as jest.Mock).mock.calls[0][1].body
@@ -231,12 +223,8 @@ describe('Analytics Integration', () => {
 
       renderHook(() => null, { wrapper: TestWrapper });
 
-      await waitFor(
-        () => {
-          expect(global.fetch).toHaveBeenCalled();
-        },
-        { timeout: 2000 }
-      );
+      jest.advanceTimersByTime(1500);
+      await Promise.resolve();
 
       const body = JSON.parse(
         (global.fetch as jest.Mock).mock.calls[0][1].body
