@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, BrowserRouter } from 'react-router-dom';
 import { AnalyticsProvider } from '@/analytics/context';
 import App from '@/App';
 
@@ -7,12 +7,10 @@ describe('Routing Integration', () => {
   it('renders the app with routing context', () => {
     render(
       <AnalyticsProvider>
-        <MemoryRouter>
+        <BrowserRouter>
           <App />
-        </MemoryRouter>
+        </BrowserRouter>
       </AnalyticsProvider>
-        <App />
-      </BrowserRouter>
     );
 
     // Check that TopNavigation renders
@@ -50,7 +48,9 @@ describe('Routing Integration', () => {
   it('displays layout with header and footer', () => {
     const { container } = render(
       <BrowserRouter>
-        <App />
+        <AnalyticsProvider>
+          <App />
+        </AnalyticsProvider>
       </BrowserRouter>
     );
 
