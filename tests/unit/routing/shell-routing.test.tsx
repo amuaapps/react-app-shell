@@ -14,12 +14,11 @@ jest.mock('@/lib/remote-app-contract/loader', () => ({
   }),
 }));
 
-import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { render, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { AnalyticsProvider } from '@/analytics/context';
 import App from '@/App';
-import { loadRemoteApp } from '@/lib/remote-app-contract/loader';
-import type { RemoteAppInstance } from '@/lib/remote-app-contract';
+import { REMOTE_ROUTES } from '@/App';
 
 describe('Shell Routing', () => {
   describe('Route Configuration', () => {
