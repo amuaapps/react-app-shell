@@ -214,6 +214,7 @@ export interface TransportConfig {
   batchSize: number;
   flushIntervalMs: number;
   maxRetries: number;
+  writeKey?: string;
 }
 
 export interface EventBuilderConfig {

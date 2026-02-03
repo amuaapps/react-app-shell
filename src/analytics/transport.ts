@@ -16,13 +16,38 @@ import type {
 const isDev = process.env.NODE_ENV !== 'production';
 
 /**
+ * Get analytics service URL from environment
+ */
+function getAnalyticsServiceUrl(): string {
+  // In Vite (runtime)
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    return (import.meta.env.VITE_ANALYTICS_SERVICE_URL as string) || '';
+  }
+  // In Jest/Node
+  return (process.env.VITE_ANALYTICS_SERVICE_URL as string) || '';
+}
+
+/**
+ * Get analytics write key from environment
+ */
+function getAnalyticsWriteKey(): string | undefined {
+  // In Vite (runtime)
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    return import.meta.env.VITE_ANALYTICS_WRITE_KEY as string;
+  }
+  // In Jest/Node
+  return process.env.VITE_ANALYTICS_WRITE_KEY;
+}
+
+/**
  * Default transport configuration
  */
 const DEFAULT_CONFIG: TransportConfig = {
-  ingestUrl: '/analytics/ingest',
+  ingestUrl: `${getAnalyticsServiceUrl()}/api/v1/events`,
   batchSize: 10,
   flushIntervalMs: 1500,
   maxRetries: 2,
+  writeKey: getAnalyticsWriteKey(),
 };
 
 /**
@@ -109,11 +134,18 @@ export class AnalyticsTransport {
     retriesLeft: number
   ): Promise<void> {
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add write key if configured
+      if (this.config.writeKey) {
+        headers['X-Analytics-Write-Key'] = this.config.writeKey;
+      }
+
       const response = await fetch(this.config.ingestUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(batch),
         keepalive: true, // Important for pagehide events
       });
