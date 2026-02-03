@@ -19,24 +19,36 @@ const isDev = process.env.NODE_ENV !== 'production';
  * Get analytics service URL from environment
  */
 function getAnalyticsServiceUrl(): string {
-  // In Vite (runtime)
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return (import.meta.env.VITE_ANALYTICS_SERVICE_URL as string) || '';
+  // In Jest/Node - check process.env first
+  if (typeof process !== 'undefined' && process.env) {
+    return (process.env.VITE_ANALYTICS_SERVICE_URL as string) || '';
   }
-  // In Jest/Node
-  return (process.env.VITE_ANALYTICS_SERVICE_URL as string) || '';
+  // In Vite (runtime) - use eval to avoid Jest parse error
+  try {
+    // eslint-disable-next-line no-eval
+    const meta = eval('import.meta');
+    return (meta.env.VITE_ANALYTICS_SERVICE_URL as string) || '';
+  } catch {
+    return '';
+  }
 }
 
 /**
  * Get analytics write key from environment
  */
 function getAnalyticsWriteKey(): string | undefined {
-  // In Vite (runtime)
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return import.meta.env.VITE_ANALYTICS_WRITE_KEY as string;
+  // In Jest/Node - check process.env first
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env.VITE_ANALYTICS_WRITE_KEY;
   }
-  // In Jest/Node
-  return process.env.VITE_ANALYTICS_WRITE_KEY;
+  // In Vite (runtime) - use eval to avoid Jest parse error
+  try {
+    // eslint-disable-next-line no-eval
+    const meta = eval('import.meta');
+    return meta.env.VITE_ANALYTICS_WRITE_KEY as string;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
