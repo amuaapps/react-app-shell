@@ -22,6 +22,11 @@ import {
 } from './consent';
 
 /**
+ * Check if we're in development mode (works in both Vite and Jest)
+ */
+const isDev = process.env.NODE_ENV !== 'production';
+
+/**
  * Analytics client implementation
  */
 export class AnalyticsClientImpl implements AnalyticsClient {
@@ -67,7 +72,7 @@ export class AnalyticsClientImpl implements AnalyticsClient {
   ): void {
     // Check consent
     if (!isAnalyticsEnabled()) {
-      if (import.meta.env.DEV) {
+      if (isDev) {
         console.warn(
           `[Analytics] Event "${name}" not sent (analytics disabled)`
         );
@@ -89,7 +94,7 @@ export class AnalyticsClientImpl implements AnalyticsClient {
     // Enqueue for sending
     this.transport.enqueue(event);
 
-    if (import.meta.env.DEV) {
+    if (isDev) {
       console.warn(`[Analytics] Tracked: ${name}`, properties);
     }
   }
@@ -124,7 +129,7 @@ export class AnalyticsClientImpl implements AnalyticsClient {
     // Enqueue for sending
     this.transport.enqueue(event);
 
-    if (import.meta.env.DEV) {
+    if (isDev) {
       console.warn(`[Analytics] Page viewed: ${args.toPath}`);
     }
   }
@@ -144,7 +149,7 @@ export class AnalyticsClientImpl implements AnalyticsClient {
     // Enqueue for sending
     this.transport.enqueue(event);
 
-    if (import.meta.env.DEV) {
+    if (isDev) {
       console.warn('[Analytics] Identify:', traits);
     }
   }
@@ -155,7 +160,7 @@ export class AnalyticsClientImpl implements AnalyticsClient {
   setConsent(consent: Partial<Consent>): void {
     updateConsent(consent);
 
-    if (import.meta.env.DEV) {
+    if (isDev) {
       console.warn('[Analytics] Consent updated:', consent);
     }
   }

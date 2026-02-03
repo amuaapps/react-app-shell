@@ -52,7 +52,9 @@ export class EventBuilder {
     properties: Record<string, unknown>
   ): TrackEvent | null {
     // Validate event
-    if (!validateEvent(name, properties)) {
+    const validation = validateEvent(name, properties);
+    if (!validation.valid) {
+      // Validation failed, return null
       return null;
     }
 

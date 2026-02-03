@@ -37,12 +37,33 @@ export interface AnalyticsProviderProps {
 }
 
 /**
+ * Get environment from either Vite or Node
+ */
+function getEnvironment(): 'dev' | 'staging' | 'prod' {
+  // In Jest/Node
+  const nodeEnv = process.env.NODE_ENV;
+  if (nodeEnv === 'production') return 'prod';
+  if (nodeEnv === 'test') return 'test' as any;
+  if (nodeEnv === 'development') return 'dev';
+  
+  // In Vite (runtime) - use eval to avoid Jest parse error
+  try {
+    const mode = eval('import.meta.env?.MODE');
+    if (mode) return mode as 'dev' | 'staging' | 'prod';
+  } catch {
+    // Not in Vite environment
+  }
+  
+  return 'dev';
+}
+
+/**
  * Default source configuration
  */
 const DEFAULT_SOURCE: Source = {
   appId: 'react-app-shell',
   platform: 'web',
-  environment: (import.meta.env.MODE as 'dev' | 'staging' | 'prod') || 'dev',
+  environment: getEnvironment(),
   appVersion: '1.0.0', // TODO: Read from package.json or env var
 };
 

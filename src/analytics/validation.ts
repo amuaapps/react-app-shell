@@ -116,32 +116,37 @@ export function validateProperties(
 }
 
 /**
- * Validate an event before sending
- *
- * @param name - Event name
- * @param properties - Event properties
- * @throws Error if validation fails
+ * Validate an event before building
+ * Returns validation result
  */
 export function validateEvent(
-  name: string,
+  eventName: string,
   properties: Record<string, unknown>
-): void {
+): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
   // Validate event name
-  if (!validateEventName(name)) {
-    const error = `Invalid event name: "${name}". Must be one of: ${Array.from(ALLOWED_EVENT_NAMES).join(', ')}`;
+  if (!validateEventName(eventName)) {
+    const error = `Invalid event name: "${eventName}". Must be one of: ${Array.from(ALLOWED_EVENT_NAMES).join(', ')}`;
+    errors.push(error);
     if (isDev) {
       console.error('[Analytics Validation]', error);
     }
-    throw new Error(error);
+    // Return early if event name is invalid
+    return { valid: false, errors };
   }
 
-  // Validate properties
-  const validation = validateProperties(name as AllowedEventName, properties);
-  if (!validation.valid) {
-    const error = `Invalid event properties for "${name}": ${validation.errors.join(', ')}`;
+  // Validate properties (eventName is now validated as AllowedEventName)
+  const propResult = validateProperties(eventName as AllowedEventName, properties);
+  if (!propResult.valid) {
+    errors.push(...propResult.errors);
     if (isDev) {
-      console.error('[Analytics Validation]', error, properties);
+      console.error('[Analytics Validation]', propResult.errors.join(', '), properties);
     }
-    throw new Error(error);
   }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
 }

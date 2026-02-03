@@ -10,6 +10,11 @@ import { useAnalytics } from './hooks';
 import type { SessionStartedProperties } from './types';
 
 /**
+ * Check if we're in development mode (works in both Vite and Jest)
+ */
+const isDev = process.env.NODE_ENV !== 'production';
+
+/**
  * Parse UTM parameters from URL search params
  */
 function parseUtmParams(
@@ -95,7 +100,7 @@ export function useShellPageViews() {
         referrer_host,
       });
 
-      if (import.meta.env.DEV) {
+      if (isDev) {
         console.warn('[Analytics] Session started', {
           landing_path: location.pathname,
           referrer_host,

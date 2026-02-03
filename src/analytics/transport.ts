@@ -11,6 +11,11 @@ import type {
 } from './types';
 
 /**
+ * Check if we're in development mode (works in both Vite and Jest)
+ */
+const isDev = process.env.NODE_ENV !== 'production';
+
+/**
  * Default transport configuration
  */
 const DEFAULT_CONFIG: TransportConfig = {
@@ -118,7 +123,7 @@ export class AnalyticsTransport {
       }
 
       // Success
-      if (import.meta.env.DEV) {
+      if (isDev) {
         console.warn(
           `[Analytics] Sent batch of ${batch.events.length} events to ${this.config.ingestUrl}`
         );
@@ -129,7 +134,7 @@ export class AnalyticsTransport {
         const backoffMs =
           250 * Math.pow(3, this.config.maxRetries - retriesLeft);
 
-        if (import.meta.env.DEV) {
+        if (isDev) {
           console.warn(
             `[Analytics] Send failed, retrying in ${backoffMs}ms... (${retriesLeft} retries left)`,
             error
@@ -140,7 +145,7 @@ export class AnalyticsTransport {
         return this.sendWithRetry(batch, retriesLeft - 1);
       } else {
         // Out of retries, drop the batch
-        if (import.meta.env.DEV) {
+        if (isDev) {
           console.error(
             `[Analytics] Failed to send batch after ${this.config.maxRetries} retries. Dropping ${batch.events.length} events.`,
             error
