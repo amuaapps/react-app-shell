@@ -255,27 +255,6 @@ jobs:
             type=sha,prefix=${{ needs.context.outputs.environment }}-,format=short
             type=raw,value=${{ needs.context.outputs.environment }}-latest
 
-      - name: Azure Login for Key Vault access
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Get Analytics Write Key from Key Vault
-        id: analytics_key
-        run: |
-          echo "Retrieving analytics write key from Key Vault..."
-          WRITE_KEY=$(az keyvault secret show \
-            --name analytics-write-key \
-            --vault-name ${{ secrets.AZURE_KEYVAULT_NAME }} \
-            --query value -o tsv)
-          
-          # Mask the key in logs
-          echo "::add-mask::$WRITE_KEY"
-          echo "write_key=$WRITE_KEY" >> $GITHUB_OUTPUT
-          echo "✅ Analytics write key retrieved from Key Vault"
-
       - name: Set environment-specific remote URLs
         id: remote_urls
         run: |
@@ -331,8 +310,6 @@ jobs:
             VITE_CORE_REMOTE_ENTRY_URL=${{ steps.remote_urls.outputs.core_url }}
             VITE_CAMPAIGNS_REMOTE_ENTRY_URL=${{ steps.remote_urls.outputs.campaigns_url }}
             VITE_SECONDARY_REMOTE_ENTRY_URL=${{ steps.remote_urls.outputs.secondary_url }}
-            VITE_ANALYTICS_SERVICE_URL=${{ steps.remote_urls.outputs.analytics_url }}
-            VITE_ANALYTICS_WRITE_KEY=${{ steps.analytics_key.outputs.write_key }}
 
       - name: Extract single image reference
         id: image_ref
@@ -366,6 +343,36 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Get Analytics Write Key from Key Vault
+        id: analytics_key
+        run: |
+          echo "Retrieving analytics write key from Key Vault..."
+          WRITE_KEY=$(az keyvault secret show \
+            --name analytics-write-key \
+            --vault-name ${{ secrets.AZURE_KEYVAULT_NAME }} \
+            --query value -o tsv)
+          
+          # Mask the key in logs
+          echo "::add-mask::$WRITE_KEY"
+          echo "write_key=$WRITE_KEY" >> $GITHUB_OUTPUT
+          echo "✅ Analytics write key retrieved from Key Vault"
+
+      - name: Set analytics service URL
+        id: analytics_url
+        run: |
+          ENV="${{ needs.context.outputs.environment }}"
+          
+          if [ "$ENV" == "prod" ]; then
+            ANALYTICS_URL="https://analytics-service-func-prod.azurewebsites.net"
+          elif [ "$ENV" == "staging" ]; then
+            ANALYTICS_URL="https://analytics-service-func-staging.azurewebsites.net"
+          else
+            ANALYTICS_URL="https://analytics-service-func-dev.azurewebsites.net"
+          fi
+          
+          echo "analytics_url=$ANALYTICS_URL" >> $GITHUB_OUTPUT
+          echo "Analytics URL: $ANALYTICS_URL"
+
       - name: Deploy GREEN revision
         id: deploy
         run: |
@@ -382,6 +389,8 @@ jobs:
           REGISTRY_PASSWORD: ${{ secrets.NPM_PACKAGE_TOKEN }}
           PROJECT_NAME: react-app-shell
           GITHUB_SHA: ${{ github.sha }}
+          VITE_ANALYTICS_SERVICE_URL: ${{ steps.analytics_url.outputs.analytics_url }}
+          VITE_ANALYTICS_WRITE_KEY: ${{ steps.analytics_key.outputs.write_key }}
 
       - name: Upload deployment outputs
         uses: actions/upload-artifact@v4

@@ -84,6 +84,8 @@ az deployment group create \
       existingTraffic="$EXISTING_TRAFFIC_JSON" \
       registryUsername="$REGISTRY_USERNAME" \
       registryPassword="$REGISTRY_PASSWORD" \
+      analyticsServiceUrl="${VITE_ANALYTICS_SERVICE_URL:-}" \
+      analyticsWriteKey="${VITE_ANALYTICS_WRITE_KEY:-}" \
   --only-show-errors
 
 # Query outputs

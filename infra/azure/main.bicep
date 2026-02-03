@@ -88,6 +88,13 @@ param minReplicas int = 1
 @minValue(1)
 param maxReplicas int = 3
 
+@description('Analytics service URL')
+param analyticsServiceUrl string = ''
+
+@description('Analytics write key')
+@secure()
+param analyticsWriteKey string = ''
+
 @description('Tags to apply to all resources')
 param tags object = {
   project: projectName
@@ -129,6 +136,8 @@ module containerApp 'modules/container-app.bicep' = {
     memory: memory
     minReplicas: minReplicas
     maxReplicas: maxReplicas
+    analyticsServiceUrl: analyticsServiceUrl
+    analyticsWriteKey: analyticsWriteKey
     tags: tags
   }
 }

@@ -64,6 +64,13 @@ param minReplicas int = 1
 @minValue(1)
 param maxReplicas int = 3
 
+@description('Analytics service URL')
+param analyticsServiceUrl string = ''
+
+@description('Analytics write key')
+@secure()
+param analyticsWriteKey string = ''
+
 @description('Tags to apply to resources')
 param tags object = {}
 
@@ -82,19 +89,16 @@ var trafficRules = concat(
 resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: containerAppName
   location: location
-  tags: union(tags, {
-    environment: environment
-  })
+  tags: tags
   properties: {
-    managedEnvironmentId: environmentId
+    environmentId: environmentId
     configuration: {
       activeRevisionsMode: 'Multiple'
       ingress: {
         external: externalIngress
         targetPort: targetPort
-        transport: 'auto'
-        allowInsecure: false
         traffic: trafficRules
+        allowInsecure: false
       }
       registries: [
         {
@@ -107,6 +111,10 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
         {
           name: 'registry-password'
           value: registryPassword
+        }
+        {
+          name: 'analytics-write-key'
+          value: analyticsWriteKey
         }
       ]
     }
@@ -124,6 +132,14 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'AMUA_ENV'
               value: environment
+            }
+            {
+              name: 'VITE_ANALYTICS_SERVICE_URL'
+              value: analyticsServiceUrl
+            }
+            {
+              name: 'VITE_ANALYTICS_WRITE_KEY'
+              secretRef: 'analytics-write-key'
             }
           ]
         }
