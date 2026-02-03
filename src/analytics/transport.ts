@@ -25,8 +25,7 @@ function getAnalyticsServiceUrl(): string {
   }
   // In Vite (runtime) - use eval to avoid Jest parse error
   try {
-    // eslint-disable-next-line no-eval
-    const meta = eval('import.meta');
+    const meta = eval('import.meta') as { env: Record<string, string> };
     return (meta.env.VITE_ANALYTICS_SERVICE_URL as string) || '';
   } catch {
     return '';
@@ -43,8 +42,7 @@ function getAnalyticsWriteKey(): string | undefined {
   }
   // In Vite (runtime) - use eval to avoid Jest parse error
   try {
-    // eslint-disable-next-line no-eval
-    const meta = eval('import.meta');
+    const meta = eval('import.meta') as { env: Record<string, string> };
     return meta.env.VITE_ANALYTICS_WRITE_KEY as string;
   } catch {
     return undefined;
