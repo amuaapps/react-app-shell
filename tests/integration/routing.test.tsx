@@ -1,11 +1,16 @@
-import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { AnalyticsProvider } from '@/analytics/context';
 import App from '@/App';
 
 describe('Routing Integration', () => {
   it('renders the app with routing context', () => {
     render(
-      <BrowserRouter>
+      <AnalyticsProvider>
+        <MemoryRouter>
+          <App />
+        </MemoryRouter>
+      </AnalyticsProvider>
         <App />
       </BrowserRouter>
     );
@@ -16,9 +21,25 @@ describe('Routing Integration', () => {
 
   it('renders TopNavigation and Footer in layout', () => {
     render(
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <AnalyticsProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </AnalyticsProvider>
+    );
+
+    expect(screen.getByText('React App Shell')).toBeInTheDocument();
+    // Footer copyright text includes current year
+    expect(screen.getByText(/ \d{4} Amua Apps/i)).toBeInTheDocument();
+  });
+
+  it('navigates to home page by default', async () => {
+    render(
+      <AnalyticsProvider>
+        <MemoryRouter initialEntries={['/']}>
+          <App />
+        </MemoryRouter>
+      </AnalyticsProvider>
     );
 
     expect(screen.getByText('React App Shell')).toBeInTheDocument();
