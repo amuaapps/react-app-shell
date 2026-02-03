@@ -109,7 +109,9 @@ describe('Analytics Integration', () => {
       await Promise.resolve();
 
       expect(global.fetch).toHaveBeenCalled();
-      const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+      const body = JSON.parse(
+        (global.fetch as jest.Mock).mock.calls[0][1].body
+      );
       expect(body.events).toHaveLength(3);
     });
 
@@ -140,7 +142,9 @@ describe('Analytics Integration', () => {
       jest.advanceTimersByTime(1500);
       await Promise.resolve();
 
-      const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+      const body = JSON.parse(
+        (global.fetch as jest.Mock).mock.calls[0][1].body
+      );
       const event = body.events[0];
 
       expect(event.actor.anonymousId).toBeDefined();
@@ -162,7 +166,9 @@ describe('Analytics Integration', () => {
         { timeout: 2000 }
       );
 
-      const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+      const body = JSON.parse(
+        (global.fetch as jest.Mock).mock.calls[0][1].body
+      );
       const event = body.events[0];
 
       expect(event.source).toEqual({
@@ -188,7 +194,9 @@ describe('Analytics Integration', () => {
         { timeout: 2000 }
       );
 
-      const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+      const body = JSON.parse(
+        (global.fetch as jest.Mock).mock.calls[0][1].body
+      );
       expect(body.events[0].type).toBe('identify');
       expect(body.events[0].traits).toEqual({
         user_id: 'user-123',
@@ -230,7 +238,9 @@ describe('Analytics Integration', () => {
         { timeout: 2000 }
       );
 
-      const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+      const body = JSON.parse(
+        (global.fetch as jest.Mock).mock.calls[0][1].body
+      );
       const sessionEvent = body.events.find(
         (e: any) => e.name === 'web.session_started'
       );
@@ -256,7 +266,9 @@ describe('Analytics Integration', () => {
       await Promise.resolve();
 
       expect(global.fetch).toHaveBeenCalled();
-      const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+      const body = JSON.parse(
+        (global.fetch as jest.Mock).mock.calls[0][1].body
+      );
       const pageEvent = body.events.find((e: any) => e.type === 'page');
 
       expect(pageEvent).toBeDefined();

@@ -141,7 +141,11 @@ export function validateEvent(
   if (!propResult.valid) {
     errors.push(...propResult.errors);
     if (isDev) {
-      console.error('[Analytics Validation]', propResult.errors.join(', '), properties);
+      console.error(
+        '[Analytics Validation]',
+        propResult.errors.join(', '),
+        properties
+      );
     }
   }
 

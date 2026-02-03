@@ -12,23 +12,25 @@ describe('Analytics Session', () => {
   describe('getOrCreateSessionId', () => {
     it('should create a new session ID if none exists', () => {
       const sessionId = getOrCreateSessionId();
-      
+
       expect(sessionId).toBeDefined();
       expect(typeof sessionId).toBe('string');
-      expect(sessionId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+      expect(sessionId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      );
     });
 
     it('should return the same session ID on subsequent calls', () => {
       const sessionId1 = getOrCreateSessionId();
       const sessionId2 = getOrCreateSessionId();
-      
+
       expect(sessionId1).toBe(sessionId2);
     });
 
     it('should persist session ID in sessionStorage', () => {
       const sessionId = getOrCreateSessionId();
       const stored = sessionStorage.getItem('analytics_session_id');
-      
+
       expect(stored).toBe(sessionId);
     });
 
@@ -37,11 +39,11 @@ describe('Analytics Session', () => {
       // Note: The session module caches the ID, so this only works on the first call
       const existingId = 'existing-session-id-test';
       sessionStorage.setItem('analytics_session_id', existingId);
-      
+
       // Import fresh to avoid cached value from previous tests
       // In a real scenario, this would be the first call after page load
       const sessionId = sessionStorage.getItem('analytics_session_id');
-      
+
       expect(sessionId).toBe(existingId);
     });
   });

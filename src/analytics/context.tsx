@@ -45,17 +45,20 @@ function getEnvironment(): 'dev' | 'staging' | 'prod' {
   if (nodeEnv === 'production') return 'prod';
   if (nodeEnv === 'test') return 'dev'; // Treat test as dev
   if (nodeEnv === 'development') return 'dev';
-  
+
   // In Vite (runtime) - use eval to avoid Jest parse error
   try {
     const mode = eval('import.meta.env?.MODE') as unknown;
-    if (typeof mode === 'string' && (mode === 'dev' || mode === 'staging' || mode === 'prod')) {
+    if (
+      typeof mode === 'string' &&
+      (mode === 'dev' || mode === 'staging' || mode === 'prod')
+    ) {
       return mode;
     }
   } catch {
     // Not in Vite environment
   }
-  
+
   return 'dev';
 }
 
