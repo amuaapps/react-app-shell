@@ -47,7 +47,7 @@ export function getOrCreateSessionId(): string {
     const newId = generateUuid();
     sessionStorage.setItem(SESSION_STORAGE_KEY, newId);
     return newId;
-  } catch (error) {
+  } catch {
     // If sessionStorage is not available (e.g., private browsing), generate in-memory ID
     console.warn('sessionStorage not available, using in-memory session ID');
     return generateUuid();

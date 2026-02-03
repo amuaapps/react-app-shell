@@ -137,7 +137,7 @@ export function validateEvent(
   }
 
   // Validate properties (eventName is now validated as AllowedEventName)
-  const propResult = validateProperties(eventName as AllowedEventName, properties);
+  const propResult = validateProperties(eventName, properties);
   if (!propResult.valid) {
     errors.push(...propResult.errors);
     if (isDev) {

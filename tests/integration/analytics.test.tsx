@@ -4,8 +4,8 @@
  * Tests the full analytics flow from React components through to transport
  */
 
-import { renderHook, waitFor } from '@testing-library/react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { renderHook } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import { AnalyticsProvider } from '@/analytics/context';
 import { useAnalytics } from '@/analytics/hooks';
 import { useShellPageViews } from '@/analytics/pageViews';

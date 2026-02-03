@@ -33,7 +33,6 @@ describe('Remote App Contract', () => {
 
       expect(minimalInstance.contractVersion).toBe('1');
       expect(typeof minimalInstance.mount).toBe('function');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(minimalInstance.unmount).not.toBeDefined();
     });
   });
