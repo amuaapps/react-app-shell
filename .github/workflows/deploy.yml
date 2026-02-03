@@ -255,10 +255,40 @@ jobs:
             type=sha,prefix=${{ needs.context.outputs.environment }}-,format=short
             type=raw,value=${{ needs.context.outputs.environment }}-latest
 
+      - name: Azure Login for Key Vault access
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Analytics Write Key from Key Vault
+        id: analytics_key
+        run: |
+          echo "Retrieving analytics write key from Key Vault..."
+          WRITE_KEY=$(az keyvault secret show \
+            --name analytics-write-key \
+            --vault-name ${{ secrets.AZURE_KEYVAULT_NAME }} \
+            --query value -o tsv)
+          
+          # Mask the key in logs
+          echo "::add-mask::$WRITE_KEY"
+          echo "write_key=$WRITE_KEY" >> $GITHUB_OUTPUT
+          echo "✅ Analytics write key retrieved from Key Vault"
+
       - name: Set environment-specific remote URLs
         id: remote_urls
         run: |
           ENV="${{ needs.context.outputs.environment }}"
+          
+          # Set analytics service URL based on environment
+          if [ "$ENV" == "prod" ]; then
+            ANALYTICS_URL="https://analytics-service-func-prod.azurewebsites.net"
+          elif [ "$ENV" == "staging" ]; then
+            ANALYTICS_URL="https://analytics-service-func-staging.azurewebsites.net"
+          else
+            ANALYTICS_URL="https://analytics-service-func-dev.azurewebsites.net"
+          fi
           
           # Set remote URLs based on environment
           # Using actual Azure Container Apps environment URLs
@@ -277,9 +307,11 @@ jobs:
             SECONDARY_URL="https://react-app-secondary-dev.proudground-2162e631.northeurope.azurecontainerapps.io/assets/remoteEntry.js"
           fi
           
+          echo "analytics_url=$ANALYTICS_URL" >> $GITHUB_OUTPUT
           echo "core_url=$CORE_URL" >> $GITHUB_OUTPUT
           echo "campaigns_url=$CAMPAIGNS_URL" >> $GITHUB_OUTPUT
           echo "secondary_url=$SECONDARY_URL" >> $GITHUB_OUTPUT
+          echo "Analytics URL: $ANALYTICS_URL"
           echo "Core URL: $CORE_URL"
           echo "Campaigns URL: $CAMPAIGNS_URL"
           echo "Secondary URL: $SECONDARY_URL"
@@ -299,6 +331,8 @@ jobs:
             VITE_CORE_REMOTE_ENTRY_URL=${{ steps.remote_urls.outputs.core_url }}
             VITE_CAMPAIGNS_REMOTE_ENTRY_URL=${{ steps.remote_urls.outputs.campaigns_url }}
             VITE_SECONDARY_REMOTE_ENTRY_URL=${{ steps.remote_urls.outputs.secondary_url }}
+            VITE_ANALYTICS_SERVICE_URL=${{ steps.remote_urls.outputs.analytics_url }}
+            VITE_ANALYTICS_WRITE_KEY=${{ steps.analytics_key.outputs.write_key }}
 
       - name: Extract single image reference
         id: image_ref
