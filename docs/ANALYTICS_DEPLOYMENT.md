@@ -2,6 +2,8 @@
 
 This document describes how to configure analytics for deployment to Azure Container Apps.
 
+**Prerequisites:** See [GITHUB_SECRETS.md](./GITHUB_SECRETS.md) for required GitHub secrets configuration.
+
 ## Environment Variables
 
 The analytics system requires two environment variables to be configured:
@@ -31,41 +33,24 @@ The authentication key for the analytics service. This should be retrieved from 
 
 **⚠️ IMPORTANT: Never commit the write key to source control!**
 
-## Azure Container Apps Configuration
+## GitHub Actions Configuration
 
-### Option 1: Reference Key Vault Secret Directly (Recommended)
+Analytics is automatically configured during deployment if you set up the required GitHub secret:
 
-Configure the Container App to reference the Key Vault secret:
+1. **Add `AZURE_KEYVAULT_NAME` secret** to your GitHub repository environment (dev/staging/prod)
+2. **Ensure Key Vault contains** a secret named `analytics-write-key`
+3. **Grant service principal** "Key Vault Secrets User" role on the Key Vault
 
-```bash
-az containerapp update \
-  --name react-app-shell-dev \
-  --resource-group <resource-group> \
-  --set-env-vars "VITE_ANALYTICS_WRITE_KEY=secretref:<keyvault-secret-name>"
-```
+The deployment workflow will:
+- Authenticate to Azure using OIDC
+- Retrieve the write key from Key Vault
+- Pass it securely to the Container App as a secret
+- Set it as an environment variable at runtime
 
-### Option 2: Set as Build Argument in GitHub Actions
-
-In your GitHub Actions workflow (`.github/workflows/deploy-dev.yml`):
-
-```yaml
-- name: Get Analytics Write Key from Key Vault
-  id: get-write-key
-  run: |
-    WRITE_KEY=$(az keyvault secret show \
-      --name analytics-write-key \
-      --vault-name <your-keyvault-name> \
-      --query value -o tsv)
-    echo "::add-mask::$WRITE_KEY"
-    echo "ANALYTICS_WRITE_KEY=$WRITE_KEY" >> $GITHUB_OUTPUT
-
-- name: Build and push Docker image
-  uses: docker/build-push-action@v5
-  with:
-    build-args: |
-      VITE_ANALYTICS_SERVICE_URL=https://analytics-service-func-dev.azurewebsites.net
-      VITE_ANALYTICS_WRITE_KEY=${{ steps.get-write-key.outputs.ANALYTICS_WRITE_KEY }}
-```
+**If `AZURE_KEYVAULT_NAME` is not configured:**
+- Deployment will succeed with a warning
+- Analytics will be deployed without authentication
+- Events will be sent but may be rejected by the analytics service
 
 ## Local Development
 

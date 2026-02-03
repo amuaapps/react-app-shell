@@ -346,6 +346,14 @@ jobs:
       - name: Get Analytics Write Key from Key Vault
         id: analytics_key
         run: |
+          if [ -z "${{ secrets.AZURE_KEYVAULT_NAME }}" ]; then
+            echo "⚠️  AZURE_KEYVAULT_NAME secret not configured"
+            echo "⚠️  Analytics will be deployed without authentication"
+            echo "⚠️  To enable analytics, configure AZURE_KEYVAULT_NAME secret in GitHub"
+            echo "write_key=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
           echo "Retrieving analytics write key from Key Vault..."
           WRITE_KEY=$(az keyvault secret show \
             --name analytics-write-key \
