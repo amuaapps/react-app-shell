@@ -14,9 +14,12 @@ jest.mock('@/lib/remote-app-contract/loader', () => ({
   }),
 }));
 
-import { render, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import App, { REMOTE_ROUTES } from '@/App';
+import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { AnalyticsProvider } from '@/analytics/context';
+import App from '@/App';
+import { loadRemoteApp } from '@/lib/remote-app-contract/loader';
+import type { RemoteAppInstance } from '@/lib/remote-app-contract';
 
 describe('Shell Routing', () => {
   describe('Route Configuration', () => {
@@ -41,7 +44,9 @@ describe('Shell Routing', () => {
     it('mounts core app for index route (/)', async () => {
       const { container } = render(
         <MemoryRouter initialEntries={['/']}>
-          <App />
+          <AnalyticsProvider>
+            <App />
+          </AnalyticsProvider>
         </MemoryRouter>
       );
 
@@ -57,7 +62,9 @@ describe('Shell Routing', () => {
     it('mounts campaigns app for /campaigns route', () => {
       const { container } = render(
         <MemoryRouter initialEntries={['/campaigns']}>
-          <App />
+          <AnalyticsProvider>
+            <App />
+          </AnalyticsProvider>
         </MemoryRouter>
       );
 
@@ -78,7 +85,9 @@ describe('Shell Routing', () => {
       testRoutes.forEach((route) => {
         const { container } = render(
           <MemoryRouter initialEntries={[route]}>
-            <App />
+            <AnalyticsProvider>
+              <App />
+            </AnalyticsProvider>
           </MemoryRouter>
         );
 
@@ -95,7 +104,9 @@ describe('Shell Routing', () => {
       for (const route of nonCampaignsRoutes) {
         const { container } = render(
           <MemoryRouter initialEntries={[route]}>
-            <App />
+            <AnalyticsProvider>
+              <App />
+            </AnalyticsProvider>
           </MemoryRouter>
         );
 
@@ -113,7 +124,9 @@ describe('Shell Routing', () => {
     it('campaigns routes take precedence over core catch-all', () => {
       const { container } = render(
         <MemoryRouter initialEntries={['/campaigns/test']}>
-          <App />
+          <AnalyticsProvider>
+            <App />
+          </AnalyticsProvider>
         </MemoryRouter>
       );
 
@@ -124,7 +137,9 @@ describe('Shell Routing', () => {
     it('core handles all non-campaigns routes', async () => {
       const { container } = render(
         <MemoryRouter initialEntries={['/some-other-route']}>
-          <App />
+          <AnalyticsProvider>
+            <App />
+          </AnalyticsProvider>
         </MemoryRouter>
       );
 
@@ -147,7 +162,9 @@ describe('Shell Routing', () => {
       testRoutes.forEach((route) => {
         const { container } = render(
           <MemoryRouter initialEntries={[route]}>
-            <App />
+            <AnalyticsProvider>
+              <App />
+            </AnalyticsProvider>
           </MemoryRouter>
         );
 
@@ -164,7 +181,9 @@ describe('Shell Routing', () => {
       testRoutes.forEach((route) => {
         const { container } = render(
           <MemoryRouter initialEntries={[route]}>
-            <App />
+            <AnalyticsProvider>
+              <App />
+            </AnalyticsProvider>
           </MemoryRouter>
         );
 
@@ -178,7 +197,9 @@ describe('Shell Routing', () => {
     it('only one remote app is mounted at a time', async () => {
       const { container } = render(
         <MemoryRouter initialEntries={['/']}>
-          <App />
+          <AnalyticsProvider>
+            <App />
+          </AnalyticsProvider>
         </MemoryRouter>
       );
 
@@ -192,7 +213,9 @@ describe('Shell Routing', () => {
     it('remote apps do not interfere with each other', async () => {
       const { container: coreContainer } = render(
         <MemoryRouter initialEntries={['/']}>
-          <App />
+          <AnalyticsProvider>
+            <App />
+          </AnalyticsProvider>
         </MemoryRouter>
       );
 
@@ -209,7 +232,9 @@ describe('Shell Routing', () => {
       // Mount campaigns app
       const { container: campaignsContainer } = render(
         <MemoryRouter initialEntries={['/campaigns']}>
-          <App />
+          <AnalyticsProvider>
+            <App />
+          </AnalyticsProvider>
         </MemoryRouter>
       );
 

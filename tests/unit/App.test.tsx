@@ -1,12 +1,15 @@
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { AnalyticsProvider } from '@/analytics/context';
 import App from '@/App';
 
 describe('App', () => {
   it('renders without crashing', () => {
     const { container } = render(
       <BrowserRouter>
-        <App />
+        <AnalyticsProvider>
+          <App />
+        </AnalyticsProvider>
       </BrowserRouter>
     );
 
@@ -18,7 +21,9 @@ describe('App', () => {
   it('renders TopNavigation component', () => {
     render(
       <BrowserRouter>
-        <App />
+        <AnalyticsProvider>
+          <App />
+        </AnalyticsProvider>
       </BrowserRouter>
     );
     // TopNavigation renders "React App Shell" text
@@ -28,7 +33,9 @@ describe('App', () => {
   it('renders main content area for remote apps', () => {
     const { container } = render(
       <BrowserRouter>
-        <App />
+        <AnalyticsProvider>
+          <App />
+        </AnalyticsProvider>
       </BrowserRouter>
     );
 
